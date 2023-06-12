@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+version: '3'
+
+services:
+  komga:
+    image: localhost/komga:0.165.0
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+    environment:
+      PUID: 911
+      PGID: 911
+
+    ports:
+      - 8080:8080
+
+    restart: unless-stopped
+    tmpfs: /tmp:exec
+    volumes:
+      - config:/config
+
+volumes:
+  config:

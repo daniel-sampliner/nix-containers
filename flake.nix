@@ -29,6 +29,7 @@
 
       imports = [
         ./fp/devshell.nix
+        ./fp/pkgs.nix
       ];
     };
 }
