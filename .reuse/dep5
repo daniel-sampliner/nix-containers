@@ -1,0 +1,14 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: nix-containers
+Upstream-Contact: Daniel Sampliner <samplinerD@gmail.com>
+Source: https://github.com/daniel-sampliner/nix-containers
+
+# Sample paragraph, commented out:
+#
+# Files: src/*
+# Copyright: $YEAR $NAME <$CONTACT>
+# License: ...
+
+Files: flake.lock
+Copyright: Daniel Sampliner <samplinerD@gmail.com>
+License: GLWTPL
