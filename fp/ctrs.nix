@@ -21,6 +21,9 @@ in
           inherit created;
           komga = pkgs.callPackage "${inputs.unstable}/pkgs/servers/komga" { };
         };
+        qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox {
+          inherit created;
+        };
       };
 
       manifest =
