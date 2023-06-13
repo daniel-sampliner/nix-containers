@@ -7,7 +7,7 @@
 set -e
 
 {
-	printf '../fp/pkgs.nix\0'
+	printf '../fp/ctrs.nix\0'
 	find "$2" -type f -print0
 } | xargs -0r redo-ifchange
 

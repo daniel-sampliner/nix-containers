@@ -7,7 +7,7 @@
 set -e
 
 {
-	printf '%s\n' flake.lock flake.nix fp/pkgs.nix
+	printf '%s\n' flake.lock flake.nix fp/ctrs.nix
 	find ctrs -name '*.nix'
 } | xargs -r redo-ifchange
 
