@@ -1,13 +1,9 @@
+#!/usr/bin/env bash
+
 # SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: GLWTPL
 
-.direnv
-.pre-commit-config.yaml
+set -e
 
-# build artifacts
-.redo
-ctrs/*.stream
-manifest
-result
-streams
+redo-ifchange streams
