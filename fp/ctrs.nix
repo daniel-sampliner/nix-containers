@@ -14,7 +14,7 @@ let
   created = "${year}-${month}-${day}T${hour}:${minute}:${second}Z";
 in
 {
-  perSystem = { lib, pkgs, ... }:
+  perSystem = { pkgs, ... }:
     let
       ctrs = {
         komga = pkgs.callPackage ../ctrs/komga {
@@ -26,17 +26,10 @@ in
         };
       };
 
-      manifest =
-        let
-          table = lib.mapAttrsToList
-            (n: v: [ n v.imageName v.imageTag ])
-            ctrs;
-          flat = lib.foldr
-            (a: b: a + "\n" + b)
-            ""
-            (builtins.map (lib.concatStringsSep "\t") table);
-        in
-        pkgs.writeText "manifest" flat;
+      manifest = pkgs.writeText "manifest" (builtins.toJSON
+        (builtins.mapAttrs
+          (_: v: { name = v.imageName; tag = v.imageTag; })
+          ctrs));
     in
     {
       packages = ctrs // { inherit manifest; };

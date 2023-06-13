@@ -14,6 +14,7 @@
     let
       runtimePkgs = builtins.attrValues {
         inherit (pkgs)
+          jq
           pigz
           redo-apenwarr
           skopeo

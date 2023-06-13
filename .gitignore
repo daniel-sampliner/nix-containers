@@ -8,6 +8,6 @@
 # build artifacts
 .redo
 ctrs/*.stream
-manifest
+manifest.json
 result
 streams

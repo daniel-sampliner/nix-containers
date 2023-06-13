@@ -7,11 +7,14 @@
 set -e
 
 redo-always
-redo-ifchange "$2.stream" ../manifest
+redo-ifchange "$2.stream" ../manifest.json
 
 ./"$2.stream" | podman image load >&2
-while read -r pkg name version; do
-	[[ $pkg != "$2" ]] && continue
-	podman image tag "$name:$version" "$name:latest"
-	break
-done <../manifest
+
+read -r name tag < <(
+	# shellcheck disable=SC2016
+	jq -r --arg pkg "$2" \
+		'.[$pkg] | [.name, .tag ] |@tsv' \
+		../manifest.json
+)
+podman image tag "${name:?}:${tag:?}" "$name:latest"
