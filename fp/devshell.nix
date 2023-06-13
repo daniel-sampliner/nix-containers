@@ -14,8 +14,8 @@
     let
       runtimePkgs = builtins.attrValues {
         inherit (pkgs)
+          pigz
           redo-apenwarr
-          podman
           skopeo
           ;
       };

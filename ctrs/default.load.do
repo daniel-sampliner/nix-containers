@@ -13,4 +13,5 @@ redo-ifchange "$2.stream" ../manifest
 while read -r pkg name version; do
 	[[ $pkg != "$2" ]] && continue
 	podman image tag "$name:$version" "$name:latest"
+	break
 done <../manifest

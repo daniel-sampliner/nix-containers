@@ -49,13 +49,16 @@ dockerTools.streamLayeredImage {
   contents = [ entrypoint komga ];
 
   config = {
-    Entrypoint = [ "/entrypoint" ];
     Cmd = [ "/bin/komga" ];
+    Entrypoint = [ "/entrypoint" ];
     Env = [
       "KOMGA_CONFIGDIR=/config"
       "JAVA_TOOL_OPTIONS=\"-XX:MaxRAMPercentage=75\""
     ];
     ExposedPorts = { "8080/tcp" = { }; };
+    Labels = {
+      "org.opencontainers.image.source" = "https://github.com/daniel-sampliner/nix-containers";
+    };
   };
 
   passthru = { inherit entrypoint; };

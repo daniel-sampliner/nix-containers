@@ -4,6 +4,9 @@
 
 name: build
 
+permissions:
+  packages: write
+
 on:
   push:
 
@@ -22,10 +25,10 @@ jobs:
         run: |
           printf '${{ secrets.NIX_SECRET_KEY }}\n' >>"$RUNNER_TEMP"/secret-key
 
-      - uses: actions/cache@v3
+      - uses: actions/cache/restore@v3
         id: cache-nix
         with:
-          key: ${{ hashFiles('flake.lock') }}
+          key: ${{ hashFiles('flake.lock') }}-v1
           path: ${{ runner.temp }}/cache
 
       - uses: DeterminateSystems/nix-installer-action@v4
@@ -53,3 +56,23 @@ jobs:
             cut -d$'\t' -f1 manifest
           } | sed 's/^/.#/' \
             | xargs -r sudo $(command -v nix) copy --to "$CACHE_URL"
+
+      - if: ${{ steps.cache-nix.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v3
+        with:
+          key: ${{ steps.cache-nix.outputs.cache-primary-key }}
+          path: ${{ runner.temp }}/cache
+
+      - if: ${{ true }}
+        name: push to ghcr
+        env:
+          REGISTRY: ghcr.io
+          ORG: ${{ github.repository_owner }}
+        run: |
+          skopeo login \
+            --username "${{ github.actor }}" \
+            --password-stdin \
+            "${REGISTRY:?}" \
+            <<< "${{ secrets.GITHUB_TOKEN }}"
+
+          redo -j$(nproc) pushs
