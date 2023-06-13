@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+name: build
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: save cache_url
+        run:
+          printf 'CACHE_URL=file://${{ runner.temp }}/cache?compression=zstd&parallel-compression=true\n' \
+            >>"$GITHUB_ENV"
+
+      - name: configure nix signing key
+        run: |
+          printf '${{ secrets.NIX_SECRET_KEY }}\n' >>"$RUNNER_TEMP"/secret-key
+
+      - uses: actions/cache@v3
+        id: cache-nix
+        with:
+          key: ${{ hashFiles('flake.lock') }}
+          path: ${{ runner.temp }}/cache
+
+      - uses: DeterminateSystems/nix-installer-action@v4
+        with:
+          extra-conf: |
+            secret-key-files = ${{ runner.temp }}/secret-key
+            extra-substituters = ${{ env.CACHE_URL }}
+            extra-trusted-substituters = ${{ env.CACHE_URL }}
+            extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }}
+
+      - name: setup nix devshell
+        run: |
+          printf "%s/bin\n" \
+            "$(nix -L build --no-link --print-out-paths .#devShells.x86_64-linux.ci)" \
+             >>"$GITHUB_PATH"
+
+      - name: build
+        run: redo -j$(nproc)
+
+      - if: ${{ steps.cache-nix.outputs.cache-hit != 'true' }}
+        name: cache nix artifacts
+        run: |
+          {
+            printf 'devShells.x86_64-linux.ci\n'
+            cut -d$'\t' -f1 manifest
+          } | sed 's/^/.#/' \
+            | xargs -r sudo $(command -v nix) copy --to "$CACHE_URL"

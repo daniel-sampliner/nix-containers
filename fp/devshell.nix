@@ -11,6 +11,15 @@
   });
 
   perSystem = { config, lib, pkgs, ... }:
+    let
+      runtimePkgs = builtins.attrValues {
+        inherit (pkgs)
+          redo-apenwarr
+          podman
+          skopeo
+          ;
+      };
+    in
     {
       devshells.default.devshell = {
         motd = "";
@@ -27,9 +36,16 @@
               config.pre-commit.settings.tools
             ;
           in
-          pcPkgs;
+          pcPkgs ++ runtimePkgs;
 
         startup.pre-commit.text = config.pre-commit.installationScript;
+      };
+
+      devshells.ci.devshell = {
+        motd = "";
+        name = "nix-containers CI";
+
+        packages = runtimePkgs;
       };
 
       pre-commit.settings =
