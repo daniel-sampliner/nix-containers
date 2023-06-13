@@ -4,15 +4,14 @@
 
 name: build
 
-permissions:
-  packages: write
-
 on:
   push:
 
 jobs:
   cache-devshell:
     runs-on: ubuntu-latest
+    outputs:
+      key: ${{ steps.key.outputs.key }}
     steps:
       - uses: actions/checkout@v3
 
@@ -24,11 +23,18 @@ jobs:
           cache_url=%s
           ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
 
+      - name: generate cache key
+        id: key
+        run: |
+          printf 'key=nix-devshell-%s\n' \
+            ${{ hashFiles('flake.lock') }} \
+            >>"$GITHUB_OUTPUT"
+
       - uses: actions/cache@v3
         id: cache
         with:
           path: ${{ env.cache_dir }}
-          key: nix-devshell-${{ hashFiles('flake.lock') }}
+          key: ${{ steps.key.outputs.key }}
 
       - name: configure nix signing key
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
@@ -50,6 +56,9 @@ jobs:
 
   gen-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      key: ${{ steps.key.outputs.key }}
+      packages: ${{ steps.build.outputs.packages }}
     steps:
       - uses: actions/checkout@v3
 
@@ -72,7 +81,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.cache_dir }}
-          key: nix-devshell-${{ hashFiles('flake.lock') }}
+          key: ${{ steps.key.outputs.key }}
 
       - name: configure nix signing key
         run: |
@@ -86,7 +95,12 @@ jobs:
             extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }}
 
       - name: build manifest
-        run: nix -L build '.#manifest'
+        id: build
+        run: |
+          nix -L build '.#manifest'
+          printf 'packages=%s\n' \
+            "$(jq -c '. | keys' result)" \
+            >>"$GITHUB_OUTPUT"
 
       - name: cache manifest
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
@@ -94,30 +108,54 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    needs:
+      - cache-devshell
+      - gen-matrix
+    outputs:
+      key: ${{ steps.key.outputs.key }}
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.gen-matrix.outputs.packages) }}
     steps:
       - uses: actions/checkout@v3
 
-      - name: save cache_url
-        run:
-          printf 'CACHE_URL=file://${{ runner.temp }}/cache?compression=zstd&parallel-compression=true\n' \
-            >>"$GITHUB_ENV"
+      - name: save cache url
+        run: |
+          cache_dir="${{ runner.temp }}/cache"
+          cache_url="file://$cache_dir?compression=zstd&parallel-compression=true"
+          printf 'cache_dir=%s
+          cache_url=%s
+          ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
+
+      - name: generate cache key
+        id: key
+        run: |
+          printf 'key=nix-%s-%s\n' \
+            ${{ matrix.package }} \
+            ${{ hashFiles('flake.lock') }} \
+            >>"$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: ${{ env.cache_dir }}
+          key: ${{ steps.key.outputs.key }}
+
+      - uses: actions/cache/restore@v3
+        with:
+          path: ${{ runner.temp }}/cache-direnv
+          key: ${{ needs.cache-devshell.outputs.key }}
+          fail-on-cache-miss: true
 
       - name: configure nix signing key
         run: |
           printf '${{ secrets.NIX_SECRET_KEY }}\n' >>"$RUNNER_TEMP"/secret-key
 
-      - uses: actions/cache/restore@v3
-        id: cache-nix
-        with:
-          key: ${{ hashFiles('flake.lock') }}-v1
-          path: ${{ runner.temp }}/cache
-
       - uses: DeterminateSystems/nix-installer-action@v4
         with:
           extra-conf: |
             secret-key-files = ${{ runner.temp }}/secret-key
-            extra-substituters = ${{ env.CACHE_URL }}
-            extra-trusted-substituters = ${{ env.CACHE_URL }}
+            extra-substituters = ${{ env.cache_url }} file://${{ runner.temp }}/cache-direnv
             extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }}
 
       - name: setup nix devshell
@@ -127,33 +165,15 @@ jobs:
              >>"$GITHUB_PATH"
 
       - name: build
-        run: redo -j$(nproc)
+        run: redo -j$(nproc) ctrs/${{ matrix.package }}.stream
 
       - if: ${{ steps.cache-nix.outputs.cache-hit != 'true' }}
         name: cache nix artifacts
         run: |
-          {
-            printf 'devShells.x86_64-linux.ci\n'
-            cut -d$'\t' -f1 manifest
-          } | sed 's/^/.#/' \
-            | xargs -r sudo $(command -v nix) copy --to "$CACHE_URL"
+          sudo "$(command -v nix)" copy --to "$cache_url" '.#${{ matrix.package }}'
 
-      - if: ${{ steps.cache-nix.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v3
+      - if: ${{ github.event_type == 'workflow_call' }}
+        uses: actions/upload-artifact@v3
         with:
-          key: ${{ steps.cache-nix.outputs.cache-primary-key }}
-          path: ${{ runner.temp }}/cache
-
-      - if: ${{ false }}
-        name: push to ghcr
-        env:
-          REGISTRY: ghcr.io
-          ORG: ${{ github.repository_owner }}
-        run: |
-          skopeo login \
-            --username "${{ github.actor }}" \
-            --password-stdin \
-            "${REGISTRY:?}" \
-            <<< "${{ secrets.GITHUB_TOKEN }}"
-
-          redo -j$(nproc) pushs
+          name: build-binary-cache
+          path: ${{ env.cache_dir }}
