@@ -26,10 +26,10 @@ in
         };
       };
 
-      manifest = pkgs.writeText "manifest" (builtins.toJSON
+      manifest = (pkgs.writeText "manifest" (builtins.toJSON
         (builtins.mapAttrs
           (_: v: { name = v.imageName; tag = v.imageTag; })
-          ctrs));
+          ctrs))).overrideAttrs (_: { allowSubstitutes = true; });
     in
     {
       packages = ctrs // { inherit manifest; };

@@ -6,12 +6,26 @@ name: build
 
 on:
   push:
+    branches-ignore:
+      - main
+  workflow_call:
+    secrets:
+      NIX_SECRET_KEY:
+        required: true
+    outputs:
+      packages:
+        value: ${{ jobs.gen-matrix.outputs.packages }}
+      cache-suffix:
+        value: ${{ jobs.cache-devshell.outputs.cache-ver }}
+
+env:
+  cache-ver: 5
 
 jobs:
   cache-devshell:
     runs-on: ubuntu-latest
     outputs:
-      key: ${{ steps.key.outputs.key }}
+      cache-ver: ${{ env.cache-ver }}
     steps:
       - uses: actions/checkout@v3
 
@@ -23,18 +37,11 @@ jobs:
           cache_url=%s
           ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
 
-      - name: generate cache key
-        id: key
-        run: |
-          printf 'key=nix-devshell-%s\n' \
-            ${{ hashFiles('flake.lock') }} \
-            >>"$GITHUB_OUTPUT"
-
       - uses: actions/cache@v3
         id: cache
         with:
           path: ${{ env.cache_dir }}
-          key: ${{ steps.key.outputs.key }}
+          key: nix-devshell-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
 
       - name: configure nix signing key
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
@@ -52,12 +59,11 @@ jobs:
       - name: cache devshell
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
         run: |
-          sudo "$(command -v nix)" copy --to "$cache_url" '.#devShells.x86_64-linux.ci'
+          sudo "$(command -v nix)" -v copy --to "$cache_url" '.#devShells.x86_64-linux.ci'
 
   gen-matrix:
     runs-on: ubuntu-latest
     outputs:
-      key: ${{ steps.key.outputs.key }}
       packages: ${{ steps.build.outputs.packages }}
     steps:
       - uses: actions/checkout@v3
@@ -70,18 +76,11 @@ jobs:
           cache_url=%s
           ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
 
-      - name: generate cache key
-        id: key
-        run: |
-          printf 'key=nix-manifest-%s\n' \
-            ${{ hashFiles('flake.lock') }} \
-            >>"$GITHUB_OUTPUT"
-
       - uses: actions/cache@v3
         id: cache
         with:
           path: ${{ env.cache_dir }}
-          key: ${{ steps.key.outputs.key }}
+          key: nix-manifest-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
 
       - name: configure nix signing key
         run: |
@@ -104,15 +103,14 @@ jobs:
 
       - name: cache manifest
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-        run: sudo "$(command -v nix)" copy --to "$cache_url" '.#manifest'
+        run: |
+          sudo "$(command -v nix)" -v copy --to "$cache_url" '.#manifest'
 
   build:
     runs-on: ubuntu-latest
     needs:
       - cache-devshell
       - gen-matrix
-    outputs:
-      key: ${{ steps.key.outputs.key }}
     strategy:
       matrix:
         package: ${{ fromJSON(needs.gen-matrix.outputs.packages) }}
@@ -121,30 +119,22 @@ jobs:
 
       - name: save cache url
         run: |
-          cache_dir="${{ runner.temp }}/cache"
+          cache_dir="${{ runner.temp }}/cache-${{ matrix.package }}"
           cache_url="file://$cache_dir?compression=zstd&parallel-compression=true"
           printf 'cache_dir=%s
           cache_url=%s
           ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
 
-      - name: generate cache key
-        id: key
-        run: |
-          printf 'key=nix-%s-%s\n' \
-            ${{ matrix.package }} \
-            ${{ hashFiles('flake.lock') }} \
-            >>"$GITHUB_OUTPUT"
-
       - uses: actions/cache@v3
         id: cache
         with:
           path: ${{ env.cache_dir }}
-          key: ${{ steps.key.outputs.key }}
+          key: nix-${{ matrix.package }}-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
 
       - uses: actions/cache/restore@v3
         with:
           path: ${{ runner.temp }}/cache-direnv
-          key: ${{ needs.cache-devshell.outputs.key }}
+          key: nix-devshell-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
           fail-on-cache-miss: true
 
       - name: configure nix signing key
@@ -170,10 +160,4 @@ jobs:
       - if: ${{ steps.cache-nix.outputs.cache-hit != 'true' }}
         name: cache nix artifacts
         run: |
-          sudo "$(command -v nix)" copy --to "$cache_url" '.#${{ matrix.package }}'
-
-      - if: ${{ github.event_type == 'workflow_call' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-binary-cache
-          path: ${{ env.cache_dir }}
+          sudo "$(command -v nix)" -v copy --to "$cache_url" '.#${{ matrix.package }}'

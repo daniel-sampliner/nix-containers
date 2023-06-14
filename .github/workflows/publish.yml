@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+name: build-and-publish
+
+permissions:
+  packages: write
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.build.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache/restore@v3
+        with:
+          path: ${{ runner.temp }}/cache-direnv
+          key: nix-devshell-${{ hashFiles('flake.lock') }}-v${{ needs.build.outputs.cache-ver }}
+          fail-on-cache-miss: true
+
+      - uses: actions/cache/restore@v3
+        with:
+          path: ${{ runner.temp }}/cache-manifest
+          key: nix-manifest-${{ hashFiles('flake.lock') }}-v${{ needs.build.outputs.cache-ver }}
+          fail-on-cache-miss: true
+
+      - uses: actions/cache/restore@v3
+        with:
+          path: ${{ runner.temp }}/cache-${{ matrix.package }}
+          key: nix-${{ matrix.package }}-${{ hashFiles('flake.lock') }}-v${{ needs.build.outputs.cache-ver }}
+          fail-on-cache-miss: true
+
+      - uses: DeterminateSystems/nix-installer-action@v4
+        with:
+          extra-conf: |
+            extra-substituters = file://${{ runner.temp }}/cache-${{ matrix.package }} file://${{ runner.temp }}/cache-direnv
+            extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }}
+
+      - name: setup nix devshell
+        run: |
+          printf "%s/bin\n" \
+            "$(nix -L build --no-link --print-out-paths .#devShells.x86_64-linux.ci)" \
+             >>"$GITHUB_PATH"
+
+      - name: push to ghcr
+        env:
+          REGISTRY: ghcr.io
+          ORG: ${{ github.repository_owner }}
+        run: |
+          skopeo login \
+            --username "${{ github.actor }}" \
+            --password-stdin \
+            "${REGISTRY:?}" \
+            <<< "${{ secrets.GITHUB_TOKEN }}"
+
+          redo -j$(nproc) ctrs/${{ matrix.package }}.push
