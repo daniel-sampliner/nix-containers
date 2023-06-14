@@ -5,13 +5,12 @@
 name: update-flake-lock
 
 on:
-  push:
   workflow_dispatch:
   schedule:
     - cron: 17 2 * * *  # 02:17 daily
 
 jobs:
-  lockfile:
+  update-flake-lock:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
