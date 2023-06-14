@@ -6,7 +6,7 @@ version: '3'
 
 services:
   komga:
-    image: localhost/komga:0.165.0
+    image: ghcr.io/becometheteapot/komga:latest
     deploy:
       resources:
         limits:
