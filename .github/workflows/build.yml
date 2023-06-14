@@ -15,11 +15,11 @@ on:
     outputs:
       packages:
         value: ${{ jobs.gen-matrix.outputs.packages }}
-      cache-suffix:
+      cache-ver:
         value: ${{ jobs.cache-devshell.outputs.cache-ver }}
 
 env:
-  cache-ver: 5
+  cache-ver: 0
 
 jobs:
   cache-devshell:
