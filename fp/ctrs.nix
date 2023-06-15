@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-{ inputs, perSystem, ... }@top:
+{ perSystem, ... }@top:
 let
   lmd = top.self.lastModifiedDate;
   year = builtins.substring 0 4 lmd;
@@ -17,13 +17,8 @@ in
   perSystem = { pkgs, ... }:
     let
       ctrs = {
-        komga = pkgs.callPackage ../ctrs/komga {
-          inherit created;
-          komga = pkgs.callPackage "${inputs.unstable}/pkgs/servers/komga" { };
-        };
-        qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox {
-          inherit created;
-        };
+        komga = pkgs.callPackage ../ctrs/komga { inherit created; };
+        qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { inherit created; };
       };
 
       manifest = (pkgs.writeText "manifest" (builtins.toJSON

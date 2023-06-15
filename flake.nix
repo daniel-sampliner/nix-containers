@@ -6,8 +6,7 @@
   description = "nix containers";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-22.11";
-    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -17,9 +16,8 @@
     devshell.inputs.nixpkgs.follows = "nixpkgs";
 
     pre-commit-hooks-nix.url = "github:cachix/pre-commit-hooks.nix";
-    pre-commit-hooks-nix.inputs.nixpkgs-stable.follows = "nixpkgs";
     pre-commit-hooks-nix.inputs.flake-utils.follows = "flake-utils";
-    pre-commit-hooks-nix.inputs.nixpkgs.follows = "unstable";
+    pre-commit-hooks-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { flake-parts, flake-utils, ... }@inputs:
