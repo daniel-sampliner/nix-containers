@@ -24,6 +24,7 @@ let
 
       importas -D /config XDG_CONFIG_HOME XDG_CONFIG_HOME
       importas -D /config XDG_DATA_HOME XDG_DATA_HOME
+      importas -D /cache XDG_CACHE_HOME XDG_CACHE_HOME
       importas -D 911 PUID PUID
       importas -D 911 PGID PGID
 
@@ -36,7 +37,10 @@ let
         ${name}
       }
       if { ${coreutils}/bin/mkdir -p $XDG_CONFIG_HOME $XDG_DATA_HOME }
-      if { ${coreutils}/bin/chown -R ''${PUID}:''${PGID} $XDG_CONFIG_HOME $XDG_DATA_HOME }
+      if { ${coreutils}/bin/chown -R ''${PUID}:''${PGID}
+        $XDG_CONFIG_HOME
+        $XDG_DATA_HOME
+        $XDG_CACHE_HOME }
       ${gosu}/bin/gosu ''${PUID}:''${PGID} $1 $@
     '';
   };
@@ -50,11 +54,12 @@ dockerTools.streamLayeredImage {
   contents = [ entrypoint qbittorrent-nox ];
 
   config = {
-    Cmd = [ "/bin/komga" ];
+    Cmd = [ "/bin/qbittorrent-nox" ];
     Entrypoint = [ "/entrypoint" ];
     Env = [
       "XDG_CONFIG_HOME=/config"
       "XDG_DATA_HOME=/config"
+      "XDG_CACHE_HOME=/cache"
     ];
     Labels = {
       "org.opencontainers.image.source" = "https://github.com/becometheteapot/nix-containers";
