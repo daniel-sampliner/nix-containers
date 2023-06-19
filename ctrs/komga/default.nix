@@ -8,9 +8,11 @@
 
 , created ? "1970-01-01T00:00:01Z"
 }:
-dockerTools.streamLayeredImage {
-  inherit created;
+let
   name = komga.pname;
+in
+dockerTools.streamLayeredImage {
+  inherit name created;
   tag = komga.version;
 
   maxLayers = 125;
@@ -36,7 +38,7 @@ dockerTools.streamLayeredImage {
     };
     Labels = {
       "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/nix-containers";
+        "https://github.com/becometheteapot/${name}";
     };
   };
 }
