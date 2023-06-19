@@ -12,7 +12,7 @@ redo-ifchange "$2.stream" ../manifest.json
 read -r name tag < <(
 	# shellcheck disable=SC2016
 	jq -r --arg pkg "$2" \
-		'.[$pkg] | [.name, .tag ] |@tsv' \
+		'.[$pkg] | [.name, .tag ] | @tsv' \
 		../manifest.json
 )
 
