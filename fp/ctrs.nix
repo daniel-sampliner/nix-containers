@@ -17,6 +17,7 @@ in
   perSystem = { pkgs, ... }:
     let
       ctrs = {
+        coreutils = pkgs.callPackage ../ctrs/coreutils { inherit created; };
         komga = pkgs.callPackage ../ctrs/komga { inherit created; };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { inherit created; };
       };
