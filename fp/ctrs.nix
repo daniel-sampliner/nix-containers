@@ -21,6 +21,7 @@ in
         komga = pkgs.callPackage ../ctrs/komga { inherit created; };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { inherit created; };
         socat = pkgs.callPackage ../ctrs/socat { inherit created; };
+        pbr = pkgs.callPackage ../ctrs/pbr { inherit created; };
       };
 
       manifest = (pkgs.writeText "manifest" (builtins.toJSON
