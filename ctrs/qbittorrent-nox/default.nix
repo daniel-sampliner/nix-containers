@@ -5,15 +5,19 @@
 { dockerTools
 , coreutils
 , execline
-, gosu
 , qbittorrent-nox
-, shadow
 , writeTextFile
+, writeText
 
 , created ? "1970-01-01T00:00:01Z"
 }:
 let
   name = qbittorrent-nox.pname;
+
+  config = writeText "qBittorrent.conf" ''
+    [LegalNotice]
+    Accepted=true
+  '';
 
   entrypoint = writeTextFile {
     name = "entrypoint";
@@ -23,21 +27,17 @@ let
       #!${execline}/bin/execlineb -Ws1
 
       importas -D /config XDG_CONFIG_HOME XDG_CONFIG_HOME
-      importas -D /config XDG_DATA_HOME XDG_DATA_HOME
-      importas -D 911 PUID PUID
-      importas -D 911 PGID PGID
+      define conf ''${XDG_CONFIG_HOME}/qBittorrent/qBittorrent.conf
 
-      if { ${shadow}/bin/groupadd --gid $PGID ${name} }
-      if { ${shadow}/bin/useradd
-        --home-dir /var/empty
-        --no-create-home
-        --shell /bin/false
-        --uid $PUID
-        ${name}
-      }
-      if { ${coreutils}/bin/mkdir -p $XDG_CONFIG_HOME $XDG_DATA_HOME }
-      if { ${coreutils}/bin/chown -R ''${PUID}:''${PGID} $XDG_CONFIG_HOME $XDG_DATA_HOME }
-      ${gosu}/bin/gosu ''${PUID}:''${PGID} $1 $@
+      ifelse { eltest -f $conf } { ${coreutils}/bin/stdbuf -oL $1 $@ }
+      ifelse
+        { ${coreutils}/bin/install -v -Dm0644 ${config} $conf }
+        { ${coreutils}/bin/stdbuf -oL $1 $@ }
+      foreground
+        { fdmove -c 1 2
+          ${coreutils}/bin/printf
+            "failed to install default config\n" }
+        exit 1
     '';
   };
 in
@@ -47,17 +47,25 @@ dockerTools.streamLayeredImage {
 
   maxLayers = 125;
 
-  contents = [ entrypoint qbittorrent-nox ];
+  contents = [
+    dockerTools.caCertificates
+    coreutils
+    entrypoint
+    qbittorrent-nox
+  ];
 
   config = {
-    Cmd = [ "/bin/komga" ];
+    Cmd = [ "qbittorrent-nox" ];
     Entrypoint = [ "/entrypoint" ];
     Env = [
       "XDG_CONFIG_HOME=/config"
-      "XDG_DATA_HOME=/config"
+      "XDG_DATA_HOME=/data"
+      "XDG_CACHE_HOME=/cache"
     ];
+    ExposedPorts = { "8080/tcp" = { }; };
     Labels = {
-      "org.opencontainers.image.source" = "https://github.com/becometheteapot/nix-containers";
+      "org.opencontainers.image.source" =
+        "https://github.com/becometheteapot/nix-containers";
     };
   };
 }

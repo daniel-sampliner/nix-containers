@@ -9,12 +9,15 @@ set -e
 redo-always
 redo-ifchange "$2.stream" ../manifest.json
 
-./"$2.stream" | podman image load >&2
+readonly PODMAN="${PODMAN:-podman}"
+
+./"$2.stream" | $PODMAN image load >&2
 
 read -r name tag < <(
 	# shellcheck disable=SC2016
 	jq -r --arg pkg "$2" \
-		'.[$pkg] | [.name, .tag ] |@tsv' \
+		'.[$pkg] | [.name, .tag ] | @tsv' \
 		../manifest.json
 )
-podman image tag "${name:?}:${tag:?}" "$name:latest"
+
+$PODMAN image tag "${name:?}:${tag:?}" "${repo:-localhost}/$name:latest"

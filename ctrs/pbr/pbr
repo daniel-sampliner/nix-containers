@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+export PS4='+(${BASH_SOURCE:-}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
+set -eux
+
+readonly GW="${GW:?}"
+readonly NIC="${NIC:?}"
+readonly ROUTE="${ROUTE:?}"
+readonly NAME="${NAME:?}"
+
+read -r _ _ _ routeHash _ < <(xxhsum -H3 <<<"$ROUTE")
+id=$((16#$routeHash % (2 ** 31 - 256)))
+readonly id
+
+readonly rtDir=/etc/iproute2/rt_tables.d
+mkdir -p -- "$rtDir"
+printf '%d\t%s\n' "$id" "$NAME" >"$rtDir/$NAME.conf"
+
+errhandle() {
+	case "${1:?}" in
+	2) return 0 ;;
+	*) exit "$2" ;;
+	esac
+}
+
+ip route add default \
+	via "$GW" \
+	dev "$NIC" \
+	table "$NAME" \
+	proto static || errhandle $?
+
+ip rule add priority 32765 from "$ROUTE" lookup "$NAME" || errhandle $?
