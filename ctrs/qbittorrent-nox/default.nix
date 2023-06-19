@@ -65,7 +65,7 @@ dockerTools.streamLayeredImage {
     ExposedPorts = { "8080/tcp" = { }; };
     Labels = {
       "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/nix-containers";
+        "https://github.com/becometheteapot/${name}";
     };
   };
 }

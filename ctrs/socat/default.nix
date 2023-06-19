@@ -7,9 +7,11 @@
 
 , created ? "1970-01-01T00:00:01Z"
 }:
-dockerTools.streamLayeredImage {
-  inherit created;
+let
   name = socat.pname;
+in
+dockerTools.streamLayeredImage {
+  inherit name created;
   tag = socat.version;
 
   maxLayers = 125;
@@ -18,7 +20,7 @@ dockerTools.streamLayeredImage {
     Entrypoint = [ "${socat}/bin/socat" ];
     Labels = {
       "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/socat";
+        "https://github.com/becometheteapot/${name}";
     };
   };
 }

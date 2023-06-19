@@ -12,14 +12,14 @@
 , created ? "1970-01-01T00:00:01Z"
 }:
 let
+  name = "pbr";
   pbr = writeScriptBin "pbr" (builtins.replaceStrings
     [ "#!/usr/bin/env bash\n" ]
     [ "#!${bash}/bin/bash\n" ]
     (builtins.readFile ./pbr));
 in
 dockerTools.streamLayeredImage {
-  inherit created;
-  name = "pbr";
+  inherit name created;
 
   maxLayers = 125;
 
@@ -34,7 +34,7 @@ dockerTools.streamLayeredImage {
     Entrypoint = [ "pbr" ];
     Labels = {
       "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/socat";
+        "https://github.com/becometheteapot/${name}";
     };
   };
 }

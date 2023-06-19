@@ -7,10 +7,11 @@
 
 , created ? "1970-01-01T00:00:01Z"
 }:
-dockerTools.streamLayeredImage {
-  inherit created;
-
+let
   name = coreutils.pname;
+in
+dockerTools.streamLayeredImage {
+  inherit name created;
   tag = coreutils.version;
 
   contents = [ coreutils ];
@@ -19,7 +20,7 @@ dockerTools.streamLayeredImage {
   config = {
     Labels = {
       "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/coreutils";
+        "https://github.com/becometheteapot/${name}";
     };
   };
 }
