@@ -16,8 +16,10 @@ dockerTools.streamLayeredImage {
 
   maxLayers = 125;
 
+  contents = [ socat ];
+
   config = {
-    Entrypoint = [ "${socat}/bin/socat" ];
+    Entrypoint = [ "socat" ];
     Labels = {
       "org.opencontainers.image.source" =
         "https://github.com/becometheteapot/${name}";
