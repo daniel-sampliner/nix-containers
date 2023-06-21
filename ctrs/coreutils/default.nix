@@ -4,6 +4,7 @@
 
 { dockerTools
 , coreutils
+, dash
 
 , created ? "1970-01-01T00:00:01Z"
 }:
@@ -14,8 +15,12 @@ dockerTools.streamLayeredImage {
   inherit name created;
   tag = coreutils.version;
 
-  contents = [ coreutils ];
+  contents = [ coreutils dash ];
   maxLayers = 125;
+
+  extraCommands = ''
+    ln -sf dash bin/sh
+  '';
 
   config = {
     Labels = {
