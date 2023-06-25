@@ -14,7 +14,7 @@ readonly ROUTE="${ROUTE:?}"
 readonly NAME="${NAME:?}"
 
 read -r _ _ _ routeHash _ < <(xxhsum -H3 <<<"$ROUTE")
-id=$((16#$routeHash % (2 ** 31 - 256)))
+id=$(((16#$routeHash & 0x7fffffffffffffff % 0xffffff00) + 256))
 readonly id
 
 readonly rtDir=/etc/iproute2/rt_tables.d
@@ -24,7 +24,7 @@ printf '%d\t%s\n' "$id" "$NAME" >"$rtDir/$NAME.conf"
 errhandle() {
 	case "${1:?}" in
 	2) return 0 ;;
-	*) exit "$2" ;;
+	*) exit "$1" ;;
 	esac
 }
 
