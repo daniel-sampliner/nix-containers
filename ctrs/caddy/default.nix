@@ -40,13 +40,13 @@ let
           '';
 
           postInstall = old.postInstall or "" + ''
-            install -v -Dm0644 -t "$out/smuggle" go.mod go.sum
+            install -Dm0644 -t "$out/smuggle" go.mod go.sum
           '';
         };
         postConfigure = caddy.postConfigure or "" + ''
           cp vendor/smuggle/go.{mod,sum} .
         '';
-        vendorHash = "sha256-3dLxkcQc72BZLPyK+WQdE3tqjpLP55GB9+sfwdPZtso=";
+        vendorHash = "sha256-cSLHcHhM7bPyZLWwPlsZNoowI+xIPcrOqsExOxffVHI=";
       });
     };
 in
