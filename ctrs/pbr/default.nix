@@ -20,6 +20,7 @@ let
 in
 dockerTools.streamLayeredImage {
   inherit name created;
+  tag = "0.0.1";
 
   maxLayers = 125;
 
