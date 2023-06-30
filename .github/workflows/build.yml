@@ -4,19 +4,13 @@
 
 name: build
 
+permissions:
+  packages: write
+
 on:
   push:
-    branches-ignore:
-      - main
-  workflow_call:
-    secrets:
-      NIX_SECRET_KEY:
-        required: true
-    outputs:
-      packages:
-        value: ${{ jobs.gen-matrix.outputs.packages }}
-      cache-ver:
-        value: ${{ jobs.cache-devshell.outputs.cache-ver }}
+    branches:
+      - '**'
   workflow_dispatch:
 
 jobs:
@@ -57,6 +51,20 @@ jobs:
 
       - name: build
         run: redo -j$(nproc) ctrs/${{ matrix.package }}.stream
+
+      - name: push to ghcr
+        if: ${{ github.ref_name == 'main' }}
+        env:
+          REGISTRY: ghcr.io
+          ORG: ${{ github.repository_owner }}
+        run: |
+          skopeo login \
+            --username "${{ github.actor }}" \
+            --password-stdin \
+            "${REGISTRY:?}" \
+            <<< "${{ secrets.GITHUB_TOKEN }}"
+
+          redo -j$(nproc) ctrs/${{ matrix.package }}.push
 
   success:
     runs-on: ubuntu-latest
