@@ -17,6 +17,7 @@ on:
         value: ${{ jobs.gen-matrix.outputs.packages }}
       cache-ver:
         value: ${{ jobs.cache-devshell.outputs.cache-ver }}
+  workflow_dispatch:
 
 env:
   cache-ver: 0
