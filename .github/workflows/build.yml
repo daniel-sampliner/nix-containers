@@ -4,94 +4,28 @@
 
 name: build
 
+permissions:
+  packages: write
+
 on:
   push:
-    branches-ignore:
-      - main
-  workflow_call:
-    secrets:
-      NIX_SECRET_KEY:
-        required: true
-    outputs:
-      packages:
-        value: ${{ jobs.gen-matrix.outputs.packages }}
-      cache-ver:
-        value: ${{ jobs.cache-devshell.outputs.cache-ver }}
+    branches:
+      - '**'
+  workflow_dispatch:
 
-env:
-  cache-ver: 0
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  cache-devshell:
-    runs-on: ubuntu-latest
-    outputs:
-      cache-ver: ${{ env.cache-ver }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: save cache url
-        run: |
-          cache_dir="${{ runner.temp }}/cache-direnv"
-          cache_url="file://$cache_dir?compression=zstd&parallel-compression=true"
-          printf 'cache_dir=%s
-          cache_url=%s
-          ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
-
-      - uses: actions/cache@v3
-        id: cache
-        with:
-          path: ${{ env.cache_dir }}
-          key: nix-devshell-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
-
-      - name: configure nix signing key
-        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-        run: |
-          printf '${{ secrets.NIX_SECRET_KEY }}\n' >>"$RUNNER_TEMP"/secret-key
-
-      - uses: DeterminateSystems/nix-installer-action@v4
-        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-        with:
-          extra-conf: |
-            secret-key-files = ${{ runner.temp }}/secret-key
-            extra-substituters = ${{ env.cache_url }}
-            extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }}
-
-      - name: cache devshell
-        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-        run: |
-          sudo "$(command -v nix)" -v copy --to "$cache_url" '.#devShells.x86_64-linux.ci'
-
   gen-matrix:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.build.outputs.packages }}
     steps:
       - uses: actions/checkout@v3
-
-      - name: save cache url
-        run: |
-          cache_dir="${{ runner.temp }}/cache-manifest"
-          cache_url="file://$cache_dir?compression=zstd&parallel-compression=true"
-          printf 'cache_dir=%s
-          cache_url=%s
-          ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
-
-      - uses: actions/cache@v3
-        id: cache
-        with:
-          path: ${{ env.cache_dir }}
-          key: nix-manifest-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
-
-      - name: configure nix signing key
-        run: |
-          printf '${{ secrets.NIX_SECRET_KEY }}\n' >>"$RUNNER_TEMP"/secret-key
-
       - uses: DeterminateSystems/nix-installer-action@v4
-        with:
-          extra-conf: |
-            secret-key-files = ${{ runner.temp }}/secret-key
-            extra-substituters = ${{ env.cache_url }}
-            extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: build manifest
         id: build
@@ -101,52 +35,17 @@ jobs:
             "$(jq -c '. | keys' result)" \
             >>"$GITHUB_OUTPUT"
 
-      - name: cache manifest
-        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-        run: |
-          sudo "$(command -v nix)" -v copy --to "$cache_url" '.#manifest'
-
   build:
     runs-on: ubuntu-latest
     needs:
-      - cache-devshell
       - gen-matrix
     strategy:
       matrix:
         package: ${{ fromJSON(needs.gen-matrix.outputs.packages) }}
     steps:
       - uses: actions/checkout@v3
-
-      - name: save cache url
-        run: |
-          cache_dir="${{ runner.temp }}/cache-${{ matrix.package }}"
-          cache_url="file://$cache_dir?compression=zstd&parallel-compression=true"
-          printf 'cache_dir=%s
-          cache_url=%s
-          ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
-
-      - uses: actions/cache@v3
-        id: cache
-        with:
-          path: ${{ env.cache_dir }}
-          key: nix-${{ matrix.package }}-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
-
-      - uses: actions/cache/restore@v3
-        with:
-          path: ${{ runner.temp }}/cache-direnv
-          key: nix-devshell-${{ hashFiles('flake.lock') }}-v${{ env.cache-ver }}
-          fail-on-cache-miss: true
-
-      - name: configure nix signing key
-        run: |
-          printf '${{ secrets.NIX_SECRET_KEY }}\n' >>"$RUNNER_TEMP"/secret-key
-
       - uses: DeterminateSystems/nix-installer-action@v4
-        with:
-          extra-conf: |
-            secret-key-files = ${{ runner.temp }}/secret-key
-            extra-substituters = ${{ env.cache_url }} file://${{ runner.temp }}/cache-direnv
-            extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: setup nix devshell
         run: |
@@ -157,10 +56,19 @@ jobs:
       - name: build
         run: redo -j$(nproc) ctrs/${{ matrix.package }}.stream
 
-      - if: ${{ steps.cache-nix.outputs.cache-hit != 'true' }}
-        name: cache nix artifacts
+      - name: push to ghcr
+        if: ${{ github.ref_name == 'main' }}
+        env:
+          REGISTRY: ghcr.io
+          ORG: ${{ github.repository_owner }}
         run: |
-          sudo "$(command -v nix)" -v copy --to "$cache_url" '.#${{ matrix.package }}'
+          skopeo login \
+            --username "${{ github.actor }}" \
+            --password-stdin \
+            "${REGISTRY:?}" \
+            <<< "${{ secrets.GITHUB_TOKEN }}"
+
+          redo -j$(nproc) ctrs/${{ matrix.package }}.push
 
   success:
     runs-on: ubuntu-latest
@@ -171,6 +79,6 @@ jobs:
         if: >-
           ${{
             contains(needs.*.result, 'failure')
-            || contains(needs.*.result, 'cancalled')
+            || contains(needs.*.result, 'cancelled')
           }}
         run: exit 1
