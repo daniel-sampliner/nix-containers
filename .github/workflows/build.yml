@@ -24,7 +24,32 @@ jobs:
       packages: ${{ steps.build.outputs.packages }}
     steps:
       - uses: actions/checkout@v3
+
+      - name: save cache url
+        run: |
+          cache_dir="${{ runner.temp }}/cache-flake"
+          cache_url="file://$cache_dir?compression=zstd&parallel-compression=true"
+          printf 'cache_dir=%s
+          cache_url=%s
+          ' "$cache_dir" "$cache_url" >>"$GITHUB_ENV"
+
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: ${{ env.cache_dir }}
+          key: nix-flake-${{ hashFiles('flake.lock') }}
+
+      - name: configure nix signing key
+        run: |
+          printf '${{ secrets.NIX_SECRET_KEY }}\n' >>"$RUNNER_TEMP"/secret-key
+
       - uses: DeterminateSystems/nix-installer-action@v4
+        with:
+          extra-conf: |
+            secret-key-files = ${{ runner.temp }}/secret-key
+            extra-substituters = ${{ env.cache_url }} https://veloren-nix.cachix.org
+            extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }} veloren-nix.cachix.org-1:zokfKJqVsNV6kI/oJdLF6TYBdNPYGSb+diMVQPn/5Rc=
+
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: build manifest
@@ -35,6 +60,10 @@ jobs:
             "$(jq -c '. | keys' result)" \
             >>"$GITHUB_OUTPUT"
 
+      - name: cache inputs
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        run: |
+          sudo "$(command -v nix)" flake archive -v --to "$cache_url" .
   build:
     runs-on: ubuntu-latest
     needs:
@@ -44,7 +73,19 @@ jobs:
         package: ${{ fromJSON(needs.gen-matrix.outputs.packages) }}
     steps:
       - uses: actions/checkout@v3
+
+      - uses: actions/cache/restore@v3
+        with:
+          path: ${{ runner.temp }}/cache-flake
+          key: nix-flake-${{ hashFiles('flake.lock') }}
+          fail-on-cache-miss: true
+
       - uses: DeterminateSystems/nix-installer-action@v4
+        with:
+          extra-conf: |
+            extra-substituters = file://${{ runner.temp }}/cache-flake https://veloren-nix.cachix.org
+            extra-trusted-public-keys = ${{ vars.NIX_PUBLIC_KEY }} veloren-nix.cachix.org-1:zokfKJqVsNV6kI/oJdLF6TYBdNPYGSb+diMVQPn/5Rc=
+
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: setup nix devshell
