@@ -24,7 +24,13 @@ jobs:
       packages: ${{ steps.build.outputs.packages }}
     steps:
       - uses: actions/checkout@v3
+
       - uses: DeterminateSystems/nix-installer-action@v4
+        with:
+          extra-conf: |
+            extra-substituters = https://veloren-nix.cachix.org
+            extra-trusted-public-keys = veloren-nix.cachix.org-1:zokfKJqVsNV6kI/oJdLF6TYBdNPYGSb+diMVQPn/5Rc=
+
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: build manifest
@@ -44,7 +50,13 @@ jobs:
         package: ${{ fromJSON(needs.gen-matrix.outputs.packages) }}
     steps:
       - uses: actions/checkout@v3
+
       - uses: DeterminateSystems/nix-installer-action@v4
+        with:
+          extra-conf: |
+            extra-substituters = https://veloren-nix.cachix.org
+            extra-trusted-public-keys = veloren-nix.cachix.org-1:zokfKJqVsNV6kI/oJdLF6TYBdNPYGSb+diMVQPn/5Rc=
+
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: setup nix devshell
