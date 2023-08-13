@@ -20,6 +20,7 @@ in
         caddy = pkgs.callPackage ../ctrs/caddy { inherit created; };
         coreutils = pkgs.callPackage ../ctrs/coreutils { inherit created; };
         komga = pkgs.callPackage ../ctrs/komga { inherit created; };
+        veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { inherit created; };
         pbr = pkgs.callPackage ../ctrs/pbr { inherit created; };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { inherit created; };
         socat = pkgs.callPackage ../ctrs/socat { inherit created; };
