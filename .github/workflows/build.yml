@@ -80,7 +80,6 @@ jobs:
         with:
           path: ${{ runner.temp }}/cache-flake
           key: nix-flake-${{ hashFiles('flake.lock') }}
-          fail-on-cache-miss: true
 
       - uses: DeterminateSystems/nix-installer-action@v4
         with:
