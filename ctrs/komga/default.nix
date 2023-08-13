@@ -31,7 +31,7 @@ dockerTools.streamLayeredImage {
         "CMD"
         "${curl}/bin/curl"
         "-qsS"
-        "localhost:8080"
+        "localhost:25600"
       ];
       StartPeriod = 30 * 1000000000;
       Timeout = 3 * 1000000000;
