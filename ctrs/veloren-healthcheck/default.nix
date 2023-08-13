@@ -6,15 +6,13 @@
 , coreutils
 , execline
 , netcat-openbsd
-, veloren-server-cli
-, veloren-voxygen
+, s6-portable-utils
 , writeTextFile
 
 , created ? "1970-01-01T00:00:01Z"
 }:
 let
-  name = veloren-server-cli.pname;
-
+  name = "veloren-healthcheck";
   healthcheck = writeTextFile {
     name = "healthcheck";
     executable = true;
@@ -23,7 +21,8 @@ let
       #!${execline}/bin/execlineb -WS2
 
       backtick -E ret {
-        pipeline { ${netcat-openbsd}/bin/nc -dNw2 $1 $2 }
+        pipeline
+          { ${netcat-openbsd}/bin/nc -dNw2 $1 $2 }
           ${coreutils}/bin/tr -dc [:graph:]
       }
       eltest $ret = VELOREN
@@ -32,43 +31,20 @@ let
 in
 dockerTools.streamLayeredImage {
   inherit name created;
-  tag = veloren-server-cli.version;
+  tag = "0.0.1";
 
   maxLayers = 125;
 
   contents = [
-    dockerTools.caCertificates
     healthcheck
-    veloren-server-cli
+    s6-portable-utils
   ];
 
   config = {
-    Entrypoint = [ "veloren-server-cli" ];
-    Env = [
-      "RUST_BACKTRACE=full"
-      "VELOREN_USERDATA=/data"
-    ];
-    ExposedPorts = {
-      "14004/tcp" = { };
-      "14005/tcp" = { };
-    };
-    Healthcheck = {
-      Test = [
-        "CMD"
-        "/healthcheck"
-        "127.0.0.1"
-        "14004"
-      ];
-      StartPeriod = 15 * 1000000000;
-      Timeout = 3 * 1000000000;
-    };
+    Entrypoint = [ "s6-pause" ];
     Labels = {
       "org.opencontainers.image.source" =
         "https://github.com/becometheteapot/${name}";
     };
-    StopSignal = "SIGUSR1";
-    Volumes = { "/data" = { }; };
   };
-
-  passthru = { inherit veloren-server-cli veloren-voxygen; };
 }
