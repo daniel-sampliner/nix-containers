@@ -44,7 +44,7 @@ let
         postConfigure = caddy.postConfigure or "" + ''
           cp vendor/smuggle/go.{mod,sum} .
         '';
-        vendorHash = "sha256-JEwaPBHq1n7hlN69ie45t1CauGkhn4fAnbqDZG1rq9o=";
+        vendorHash = "sha256-l7ArL/YqegK7PcvF+X38JAN9GWIdOErvUg2O46abbS8=";
       });
     };
 in
