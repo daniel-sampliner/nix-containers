@@ -4,6 +4,7 @@
 
 { dockerTools
 , execline
+, killall
 , lib
 , s6-portable-utils
 , snooze
@@ -24,6 +25,7 @@ let
   entrypoint =
     let
       runtimeInputs = [
+        killall
         my-tf
         s6-portable-utils
         snooze
@@ -34,25 +36,28 @@ let
       executable = true;
       destination = "/entrypoint";
       text = ''
-        #!${execline}/bin/execlineb -WS2
+        #!${execline}/bin/execlineb -WS1
 
         importas -D "" path PATH
         export PATH "${lib.makeBinPath runtimeInputs}":$path
 
         execline-cd /lib/cfdyndns
+
+        trap { default {
+          importas SIGNAL SIGNAL
+          killall -e -s $SIGNAL -v terraform snooze
+        } }
+
         if { terraform init }
 
-        case -s $1 {
-          wait { snooze -v -H* -M* -S* -t /data/last -T $2 $0 go $2 }
-          go {
-            if { terraform apply -auto-approve -input=false }
-              s6-touch /data/last
-          }
-        }
+        define -s tfapply "terraform apply -auto-approve -input=false"
 
-        foreground
-          { fdmove -c 1 2 s6-echo unknown stage $1 }
-          exit 1
+        if -Xn { loopwhilex
+          if { snooze -v -H* -M* -S* -t /data/last -T $1 }
+          if { $tfapply } s6-touch /data/last }
+
+        foreground { $tfapply -destroy }
+        s6-rmrf /data/last
       '';
     };
 in
@@ -74,7 +79,8 @@ dockerTools.streamLayeredImage {
 
   config = {
     Cmd = [ "5m" ];
-    Entrypoint = [ "/entrypoint" "wait" ];
+    Entrypoint = [ "/entrypoint" ];
     Volumes = { "/data" = { }; };
+    StopSignal = "SIGINT";
   };
 }
