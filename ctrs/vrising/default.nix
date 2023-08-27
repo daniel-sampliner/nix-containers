@@ -4,7 +4,9 @@
 
 { dockerTools
 , coreutils
+, curl
 , execline
+, gawk
 , killall
 , lib
 , wine64
@@ -60,6 +62,32 @@ let
             ''${GAME_DIR}/VRisingServer.exe -persistentDataPath ''${DATA_DIR}
       '';
     };
+
+  healthcheck =
+    let
+      runtimeInputs = [
+        curl
+        gawk
+      ];
+    in
+    writeTextFile {
+      name = "healthcheck";
+      executable = true;
+      destination = "/healthcheck";
+      text = ''
+        #!${execline}/bin/execlineb -WP
+
+        importas -D "" path PATH
+        export PATH "${lib.makeBinPath runtimeInputs}":$path
+
+        backtick -E uptime
+          { pipeline
+            { curl -sS localhost:9090/metrics }
+            awk "/^vr_uptime_seconds /{print $NF; exit}" }
+
+        if { eltest -n $uptime } eltest $uptime -gt 0
+      '';
+    };
 in
 dockerTools.streamLayeredImage {
   inherit name created;
@@ -67,14 +95,27 @@ dockerTools.streamLayeredImage {
 
   maxLayers = 125;
 
-  contents = [ dockerTools.binSh dockerTools.caCertificates entrypoint ];
+  contents = [
+    dockerTools.binSh
+    dockerTools.caCertificates
+    entrypoint
+    healthcheck
+  ];
 
   config = {
     Entrypoint = [ "/entrypoint" ];
-    Env = [ "WINEPREFIX=/wine" ];
+    Env = [
+      "WINEPREFIX=/wine"
+      "VR_API_ENABLED=true"
+    ];
     ExposedPorts = {
       "9876/udp" = { };
       "9877/udp" = { };
+    };
+    Healthcheck = {
+      Test = [ "CMD" "/healthcheck" ];
+      StartPeriod = 120 * 1000000000;
+      StartInterval = 10 * 1000000000;
     };
     Labels = {
       "org.opencontainers.image.source" =

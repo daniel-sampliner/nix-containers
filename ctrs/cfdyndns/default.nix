@@ -60,6 +60,16 @@ let
         s6-rmrf /data/last
       '';
     };
+
+  healthcheck = writeTextFile {
+    name = "healthcheck";
+    executable = true;
+    destination = "/healthcheck";
+    text = ''
+      #!${execline}/bin/execlineb -WP
+      eltest -f /data/last
+    '';
+  };
 in
 dockerTools.streamLayeredImage {
   inherit name created;
@@ -70,6 +80,7 @@ dockerTools.streamLayeredImage {
   contents = [
     dockerTools.caCertificates
     entrypoint
+    healthcheck
   ];
 
   extraCommands = ''
@@ -80,6 +91,15 @@ dockerTools.streamLayeredImage {
   config = {
     Cmd = [ "5m" ];
     Entrypoint = [ "/entrypoint" ];
+    Healthcheck = {
+      Test = [ "CMD" "/healthcheck" ];
+      StartPeriod = 10 * 1000000000;
+      StartInterval = 1 * 1000000000;
+    };
+    Labels = {
+      "org.opencontainers.image.source" =
+        "https://github.com/becometheteapot/${name}";
+    };
     Volumes = { "/data" = { }; };
     StopSignal = "SIGINT";
   };
