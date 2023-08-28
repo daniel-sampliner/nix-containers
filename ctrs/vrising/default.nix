@@ -6,13 +6,13 @@
 , coreutils
 , curl
 , execline
+, fontconfig
 , gawk
 , killall
 , lib
-, wine64
+, wineWowPackages
 , writeTextFile
 , xorg
-, xvfb-run
 
 , created ? "1970-01-01T00:00:01Z"
 }:
@@ -24,9 +24,8 @@ let
       runtimeInputs = [
         coreutils
         killall
-        wine64
+        wineWowPackages.stagingFull
         xorg.xorgserver
-        xvfb-run
       ];
     in
     writeTextFile {
@@ -52,14 +51,24 @@ let
               exit 0
         }
 
+        define bepinex ''${GAME_DIR}/BepInEx
+
         trap { default {
           importas SIGNAL SIGNAL
-          killall -e -s $SIGNAL -v VRisingServer.exe
+          foreground { fdmove -c 1 2 echo signal: $SIGNAL }
+          foreground { timeout 15 killall -s $SIGNAL -v -w VRisingServer.exe }
+          foreground { if { eltest -f ''${bepinex}/LogOutput.log }
+            mv -- ''${bepinex}/LogOutput.log ''${bepinex}/LogOutput.log.1 }
+          kill -$SIGNAL -1
         } }
 
-        xvfb-run --auto-display --
-          wine64
-            ''${GAME_DIR}/VRisingServer.exe -persistentDataPath ''${DATA_DIR}
+        background { Xvfb -screen 0 640x480x24 -nolisten tcp }
+        background { if { eltest -d ''${bepinex} }
+          tail -n+0 -F ''${bepinex}/LogOutput.log }
+
+        export DISPLAY :0
+
+        wine ''${GAME_DIR}/VRisingServer.exe -persistentDataPath ''${DATA_DIR}
       '';
     };
 
@@ -99,14 +108,15 @@ dockerTools.streamLayeredImage {
     dockerTools.binSh
     dockerTools.caCertificates
     entrypoint
+    fontconfig.out
     healthcheck
   ];
 
   config = {
     Entrypoint = [ "/entrypoint" ];
     Env = [
-      "WINEPREFIX=/wine"
       "VR_API_ENABLED=true"
+      "WINEPREFIX=/wine"
     ];
     ExposedPorts = {
       "9876/udp" = { };
