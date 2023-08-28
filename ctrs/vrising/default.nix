@@ -6,10 +6,10 @@
 , coreutils
 , curl
 , execline
-, fontconfig
 , gawk
 , killall
 , lib
+, logrotate
 , wineWowPackages
 , writeTextFile
 , xorg
@@ -19,12 +19,26 @@
 let
   name = "v_rising";
 
+  logrotate-conf = writeTextFile {
+    name = "logrotate.conf";
+    destination = "/etc/logrotate.conf";
+    text = ''
+      /game/BepInEx/*.log {
+        rotate 8
+        size 0
+        missingok
+        notifempty
+      }
+    '';
+  };
+
   entrypoint =
     let
       runtimeInputs = [
         coreutils
         killall
-        wineWowPackages.stagingFull
+        logrotate
+        wineWowPackages.staging
         xorg.xorgserver
       ];
     in
@@ -38,10 +52,10 @@ let
         importas -D "" path PATH
         export PATH "${lib.makeBinPath runtimeInputs}":$path
 
-        importas -D /game GAME_DIR GAME_DIR
-        importas -D /data DATA_DIR DATA_DIR
-        define default_settings ''${GAME_DIR}/VRisingServer_Data/StreamingAssets/Settings
-        define settings ''${DATA_DIR}/Settings
+        define default_settings /game/VRisingServer_Data/StreamingAssets/Settings
+        define settings /data/Settings
+
+        if { logrotate --state /dev/null /etc/logrotate.conf }
 
         if {
           forx -E -o 0 f { ServerGameSettings.json ServerHostSettings.json }
@@ -51,14 +65,12 @@ let
               exit 0
         }
 
-        define bepinex ''${GAME_DIR}/BepInEx
+        define bepinex /game/BepInEx
 
         trap { default {
           importas SIGNAL SIGNAL
           foreground { fdmove -c 1 2 echo signal: $SIGNAL }
           foreground { timeout 15 killall -s $SIGNAL -v -w VRisingServer.exe }
-          foreground { if { eltest -f ''${bepinex}/LogOutput.log }
-            mv -- ''${bepinex}/LogOutput.log ''${bepinex}/LogOutput.log.1 }
           kill -$SIGNAL -1
         } }
 
@@ -68,7 +80,7 @@ let
 
         export DISPLAY :0
 
-        wine ''${GAME_DIR}/VRisingServer.exe -persistentDataPath ''${DATA_DIR}
+        wine /game/VRisingServer.exe -persistentDataPath /data
       '';
     };
 
@@ -108,8 +120,8 @@ dockerTools.streamLayeredImage {
     dockerTools.binSh
     dockerTools.caCertificates
     entrypoint
-    fontconfig.out
     healthcheck
+    logrotate-conf
   ];
 
   config = {
