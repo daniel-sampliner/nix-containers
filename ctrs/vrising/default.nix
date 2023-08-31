@@ -3,10 +3,9 @@
 # SPDX-License-Identifier: GLWTPL
 
 { dockerTools
+, rustPlatform
 , coreutils
-, curl
 , execline
-, gawk
 , killall
 , lib
 , logrotate
@@ -18,6 +17,13 @@
 }:
 let
   name = "v_rising";
+
+  winePkg = wineWowPackages.staging;
+
+  fontconfig = lib.pipe winePkg.buildInputs [
+    (builtins.filter (d: d.pname == "fontconfig"))
+    builtins.head
+  ];
 
   logrotate-conf = writeTextFile {
     name = "logrotate.conf";
@@ -38,7 +44,7 @@ let
         coreutils
         killall
         logrotate
-        wineWowPackages.staging
+        winePkg
         xorg.xorgserver
       ];
     in
@@ -86,33 +92,31 @@ let
 
   healthcheck =
     let
-      runtimeInputs = [
-        curl
-        gawk
+      src = builtins.path { path = ./.; name = "healthcheck"; };
+      cargo = lib.pipe "${src}/Cargo.toml" [
+        builtins.readFile
+        builtins.fromTOML
       ];
+
+      lockFile = "${src}/Cargo.lock";
     in
-    writeTextFile {
-      name = "healthcheck";
-      executable = true;
-      destination = "/healthcheck";
-      text = ''
-        #!${execline}/bin/execlineb -WP
+    rustPlatform.buildRustPackage {
+      pname = cargo.package.name;
+      inherit (cargo.package) version;
+      inherit src;
 
-        importas -D "" path PATH
-        export PATH "${lib.makeBinPath runtimeInputs}":$path
+      cargoLock = { inherit lockFile; };
+      cargoDeps = rustPlatform.importCargoLock { inherit lockFile; };
 
-        backtick -E uptime
-          { pipeline
-            { curl -sS localhost:9090/metrics }
-            awk "/^vr_uptime_seconds /{print $NF; exit}" }
-
-        if { eltest -n $uptime } eltest $uptime -gt 0
+      postInstall = ''
+        mv $out/bin/healthcheck $out/healthcheck
+        rmdir $out/bin
       '';
     };
 in
 dockerTools.streamLayeredImage {
   inherit name created;
-  tag = "0.0.1";
+  tag = "0.0.2";
 
   maxLayers = 125;
 
@@ -120,6 +124,7 @@ dockerTools.streamLayeredImage {
     dockerTools.binSh
     dockerTools.caCertificates
     entrypoint
+    fontconfig.out
     healthcheck
     logrotate-conf
   ];
@@ -136,8 +141,6 @@ dockerTools.streamLayeredImage {
     };
     Healthcheck = {
       Test = [ "CMD" "/healthcheck" ];
-      StartPeriod = 120 * 1000000000;
-      StartInterval = 10 * 1000000000;
     };
     Labels = {
       "org.opencontainers.image.source" =
@@ -151,4 +154,5 @@ dockerTools.streamLayeredImage {
     };
   };
 
+  passthru = { inherit healthcheck; };
 }
