@@ -37,7 +37,17 @@
               config.pre-commit.settings.tools
             ;
           in
-          pcPkgs ++ runtimePkgs;
+          pcPkgs
+          ++ runtimePkgs
+          ++ builtins.attrValues {
+            inherit (pkgs)
+              cargo
+              clippy
+              gcc
+              rustc
+              rustfmt
+              ;
+          };
 
         startup.pre-commit.text = config.pre-commit.installationScript;
       };
