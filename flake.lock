@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "cetusguard": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1691702156,
+        "narHash": "sha256-aXVTufF4m3xxI25Ya9iNf9sJD5l9+LTAxrwdLW0ineE=",
+        "owner": "hectorm",
+        "repo": "cetusguard",
+        "rev": "be1e44768313653f0aea606417ee02ba38867db7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hectorm",
+        "ref": "v1.0.6",
+        "repo": "cetusguard",
+        "type": "github"
+      }
+    },
     "devshell": {
       "inputs": {
         "nixpkgs": [
@@ -154,6 +171,7 @@
     },
     "root": {
       "inputs": {
+        "cetusguard": "cetusguard",
         "devshell": "devshell",
         "flake-parts": "flake-parts",
         "flake-utils": "flake-utils",

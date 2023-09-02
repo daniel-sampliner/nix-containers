@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-{ perSystem, ... }@top:
+{ inputs, perSystem, ... }@top:
 let
   lmd = top.self.lastModifiedDate;
   year = builtins.substring 0 4 lmd;
@@ -26,6 +26,8 @@ in
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { inherit created; };
         socat = pkgs.callPackage ../ctrs/socat { inherit created; };
         vrising = pkgs.callPackage ../ctrs/vrising { inherit created; };
+
+        cetusguard = pkgs.callPackage ../ctrs/cetusguard { inherit created; src = inputs.cetusguard; };
       };
 
       manifest = (pkgs.writeText "manifest" (builtins.toJSON
