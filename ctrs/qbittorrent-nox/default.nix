@@ -4,6 +4,7 @@
 
 { dockerTools
 , coreutils
+, curl
 , execline
 , qbittorrent-nox
 , writeTextFile
@@ -63,6 +64,9 @@ dockerTools.streamLayeredImage {
       "XDG_CACHE_HOME=/cache"
     ];
     ExposedPorts = { "8080/tcp" = { }; };
+    Healthcheck = {
+      Test = [ "CMD" "${curl}/bin/curl" "-qsS" "localhost:8080/api/v2/app/version" ];
+    };
     Labels = {
       "org.opencontainers.image.source" =
         "https://github.com/becometheteapot/${name}";
