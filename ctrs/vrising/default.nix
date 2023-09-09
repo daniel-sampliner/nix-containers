@@ -18,7 +18,7 @@
 let
   name = "v_rising";
 
-  winePkg = wineWowPackages.staging;
+  winePkg = wineWowPackages.stagingFull;
 
   fontconfig = lib.pipe winePkg.buildInputs [
     (builtins.filter (d: d.pname == "fontconfig"))
