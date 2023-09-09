@@ -86,6 +86,7 @@ let
 
         export DISPLAY :0
 
+        if { wineboot }
         wine /game/VRisingServer.exe -persistentDataPath /data
       '';
     };
@@ -116,7 +117,7 @@ let
 in
 dockerTools.streamLayeredImage {
   inherit name created;
-  tag = "0.0.2";
+  tag = "0.0.3";
 
   maxLayers = 125;
 
