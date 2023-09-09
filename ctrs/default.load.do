@@ -20,4 +20,4 @@ read -r name tag < <(
 		../manifest.json
 )
 
-$PODMAN image tag "${name:?}:${tag:?}" "${repo:-localhost}/$name:latest"
+$PODMAN image tag "${name:?}:${tag:?}" "$name:latest"
