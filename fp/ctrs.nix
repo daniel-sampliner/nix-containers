@@ -19,6 +19,7 @@ in
       ctrs = {
         caddy = pkgs.callPackage ../ctrs/caddy { inherit created; };
         cfdyndns = pkgs.callPackage ../ctrs/cfdyndns { inherit created; };
+        chrony = pkgs.callPackage ../ctrs/chrony { inherit created; };
         coreutils = pkgs.callPackage ../ctrs/coreutils { inherit created; };
         komga = pkgs.callPackage ../ctrs/komga { inherit created; };
         veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { inherit created; };
