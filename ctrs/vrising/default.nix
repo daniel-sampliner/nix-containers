@@ -18,7 +18,7 @@
 let
   name = "v_rising";
 
-  winePkg = wineWowPackages.staging;
+  winePkg = wineWowPackages.stagingFull;
 
   fontconfig = lib.pipe winePkg.buildInputs [
     (builtins.filter (d: d.pname == "fontconfig"))
@@ -80,7 +80,7 @@ let
           kill -$SIGNAL -1
         } }
 
-        background { Xvfb -screen 0 640x480x24 -nolisten tcp -maxclients 512 }
+        background { Xvfb -screen 0 640x480x24 -nolisten tcp }
         background { if { eltest -d ''${bepinex} }
           tail -n+0 -F ''${bepinex}/LogOutput.log }
 
