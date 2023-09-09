@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: GLWTPL
 
 { dockerTools
-, rustPlatform
 , coreutils
 , execline
 , killall
 , lib
 , logrotate
+, rustPlatform
 , wineWowPackages
 , writeTextFile
 , xorg
@@ -80,7 +80,7 @@ let
           kill -$SIGNAL -1
         } }
 
-        background { Xvfb -screen 0 640x480x24 -nolisten tcp }
+        background { Xvfb -screen 0 640x480x24 -nolisten tcp -maxclients 512 }
         background { if { eltest -d ''${bepinex} }
           tail -n+0 -F ''${bepinex}/LogOutput.log }
 
@@ -117,7 +117,7 @@ let
 in
 dockerTools.streamLayeredImage {
   inherit name created;
-  tag = "0.0.3";
+  tag = "0.0.4";
 
   maxLayers = 125;
 
