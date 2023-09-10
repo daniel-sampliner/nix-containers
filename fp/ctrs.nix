@@ -14,7 +14,7 @@ let
   created = "${year}-${month}-${day}T${hour}:${minute}:${second}Z";
 in
 {
-  perSystem = { pkgs, ... }:
+  perSystem = { pkgs, system, ... }:
     let
       ctrs = {
         caddy = pkgs.callPackage ../ctrs/caddy { inherit created; };
@@ -37,6 +37,43 @@ in
           ctrs))).overrideAttrs (_: { allowSubstitutes = true; });
     in
     {
+      _module.args.pkgs = import inputs.nixpkgs {
+        inherit system;
+        overlays = [
+          (final: prev:
+            let inherit (final) lib; in {
+              dockerTools = prev.dockerTools // {
+                streamLayeredImage = args: lib.pipe args [
+                  (a: a // {
+                    inherit created;
+                    maxLayers = a.maxLayers or 125;
+                  })
+                  prev.dockerTools.streamLayeredImage
+                  (d: builtins.getAttr "overrideAttrs" d (old:
+                    let
+                      inherit (old) buildCommand;
+                      streamScript = lib.pipe buildCommand [
+                        (lib.splitString " ")
+                        (l: builtins.elemAt l 1)
+                      ];
+                      patchedScript = final.runCommand "stream" { } ''
+                        patch -o "$out" "${streamScript}" "${./layer-mtime.patch}"
+                        chmod a+x "$out"
+                      '';
+                      newBuildCommand = builtins.replaceStrings
+                        [ streamScript ]
+                        [ "${patchedScript}" ]
+                        buildCommand;
+                    in
+                    assert (lib.isStorePath streamScript);
+                    { buildCommand = newBuildCommand; }
+                  ))
+                ];
+              };
+            })
+        ];
+      };
+
       packages = ctrs // { inherit manifest; };
     };
 }
