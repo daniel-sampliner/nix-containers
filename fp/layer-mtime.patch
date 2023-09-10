@@ -1,0 +1,22 @@
+diff --git a/pkgs/build-support/docker/stream_layered_image.py b/pkgs/build-support/docker/stream_layered_image.py
+index d7c63eb43a78..50351ab8a57d 100644
+--- a/pkgs/build-support/docker/stream_layered_image.py
++++ b/pkgs/build-support/docker/stream_layered_image.py
+@@ -336,7 +336,7 @@ def main():
+         for num, store_layer in enumerate(conf["store_layers"], start=start):
+             print("Creating layer", num, "from paths:", store_layer,
+                   file=sys.stderr)
+-            info = add_layer_dir(tar, store_layer, store_dir, mtime=mtime)
++            info = add_layer_dir(tar, store_layer, store_dir, mtime=1)
+             layers.append(info)
+ 
+         print("Creating layer", len(layers) + 1, "with customisation...",
+@@ -345,7 +345,7 @@ def main():
+           add_customisation_layer(
+             tar,
+             conf["customisation_layer"],
+-            mtime=mtime
++            mtime=1
+           )
+         )
+ 

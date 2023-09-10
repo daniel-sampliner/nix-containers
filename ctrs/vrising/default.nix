@@ -12,8 +12,6 @@
 , wineWowPackages
 , writeTextFile
 , xorg
-
-, created ? "1970-01-01T00:00:01Z"
 }:
 let
   name = "v_rising";
@@ -116,10 +114,9 @@ let
     };
 in
 dockerTools.streamLayeredImage {
-  inherit name created;
+  inherit name;
   tag = "0.0.4";
 
-  maxLayers = 125;
 
   contents = [
     dockerTools.binSh

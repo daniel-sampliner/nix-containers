@@ -5,17 +5,14 @@
 { dockerTools
 , curl
 , komga
-
-, created ? "1970-01-01T00:00:01Z"
 }:
 let
   name = komga.pname;
 in
 dockerTools.streamLayeredImage {
-  inherit name created;
+  inherit name;
   tag = komga.version;
 
-  maxLayers = 125;
 
   contents = [ komga ];
 

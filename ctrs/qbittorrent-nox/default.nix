@@ -9,8 +9,6 @@
 , qbittorrent-nox
 , writeTextFile
 , writeText
-
-, created ? "1970-01-01T00:00:01Z"
 }:
 let
   name = qbittorrent-nox.pname;
@@ -43,10 +41,9 @@ let
   };
 in
 dockerTools.streamLayeredImage {
-  inherit name created;
+  inherit name;
   tag = qbittorrent-nox.version;
 
-  maxLayers = 125;
 
   contents = [
     dockerTools.caCertificates
