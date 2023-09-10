@@ -48,6 +48,7 @@ dockerTools.streamLayeredImage {
   config = {
     Cmd = [ "-d" "-r" "-s" "-F" "1" "-u" "nobody" ];
     Entrypoint = [ "chronyd" ];
+    Env = [ "PATH=/bin" ];
     Healthcheck = {
       Test = [ "CMD" "chronyc" "waitsync" "1" ];
       StartInterval = 1 * 1000000000;
