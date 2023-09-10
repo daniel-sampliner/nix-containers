@@ -86,6 +86,7 @@
               name = "fix end of files";
               entry = "${pre-commit-hooks}/bin/end-of-file-fixer";
               types = [ "text" ];
+              excludes = [ ''\.patch$'' ];
             };
 
             reuse = {

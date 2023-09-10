@@ -1,17 +1,21 @@
+@@ SPDX-FileCopyrightText: 2023 - 2024 Daniel Sampliner <samplinerD@gmail.com>
+
+@@ SPDX-License-Identifier: GLWTPL
+
 diff --git a/pkgs/build-support/docker/stream_layered_image.py b/pkgs/build-support/docker/stream_layered_image.py
-index d7c63eb43a78..50351ab8a57d 100644
+index 98ec2358cef9..583d904b2c75 100644
 --- a/pkgs/build-support/docker/stream_layered_image.py
 +++ b/pkgs/build-support/docker/stream_layered_image.py
-@@ -336,7 +336,7 @@ def main():
-         for num, store_layer in enumerate(conf["store_layers"], start=start):
+@@ -343,7 +343,7 @@ def main():
              print("Creating layer", num, "from paths:", store_layer,
                    file=sys.stderr)
--            info = add_layer_dir(tar, store_layer, store_dir, mtime=mtime)
-+            info = add_layer_dir(tar, store_layer, store_dir, mtime=1)
+             info = add_layer_dir(tar, store_layer, store_dir,
+-                                 mtime, uid, gid, uname, gname)
++                                 mtime=1, uid, gid, uname, gname)
              layers.append(info)
- 
+
          print("Creating layer", len(layers) + 1, "with customisation...",
-@@ -345,7 +345,7 @@ def main():
+@@ -352,7 +352,7 @@ def main():
            add_customisation_layer(
              tar,
              conf["customisation_layer"],
@@ -19,4 +23,4 @@ index d7c63eb43a78..50351ab8a57d 100644
 +            mtime=1
            )
          )
- 
+
