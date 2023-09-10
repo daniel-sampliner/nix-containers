@@ -8,7 +8,6 @@
 , writeTextFile
 
 , src
-, created ? "1970-01-01T00:00:01Z"
 }:
 let
   name = "cetusguard";
@@ -35,10 +34,9 @@ let
   };
 in
 dockerTools.streamLayeredImage {
-  inherit name created;
+  inherit name;
   tag = version;
 
-  maxLayers = 125;
 
   contents = [ cetusguard curl healthcheck ];
 

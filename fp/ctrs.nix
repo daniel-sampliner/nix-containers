@@ -17,18 +17,18 @@ in
   perSystem = { pkgs, system, ... }:
     let
       ctrs = {
-        caddy = pkgs.callPackage ../ctrs/caddy { inherit created; };
-        cfdyndns = pkgs.callPackage ../ctrs/cfdyndns { inherit created; };
-        chrony = pkgs.callPackage ../ctrs/chrony { inherit created; };
-        coreutils = pkgs.callPackage ../ctrs/coreutils { inherit created; };
-        komga = pkgs.callPackage ../ctrs/komga { inherit created; };
-        veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { inherit created; };
-        pbr = pkgs.callPackage ../ctrs/pbr { inherit created; };
-        qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { inherit created; };
-        socat = pkgs.callPackage ../ctrs/socat { inherit created; };
-        vrising = pkgs.callPackage ../ctrs/vrising { inherit created; };
+        caddy = pkgs.callPackage ../ctrs/caddy { };
+        cfdyndns = pkgs.callPackage ../ctrs/cfdyndns { };
+        chrony = pkgs.callPackage ../ctrs/chrony { };
+        coreutils = pkgs.callPackage ../ctrs/coreutils { };
+        komga = pkgs.callPackage ../ctrs/komga { };
+        veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { };
+        pbr = pkgs.callPackage ../ctrs/pbr { };
+        qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
+        socat = pkgs.callPackage ../ctrs/socat { };
+        vrising = pkgs.callPackage ../ctrs/vrising { };
 
-        cetusguard = pkgs.callPackage ../ctrs/cetusguard { inherit created; src = inputs.cetusguard; };
+        cetusguard = pkgs.callPackage ../ctrs/cetusguard { src = inputs.cetusguard; };
       };
 
       manifest = (pkgs.writeText "manifest" (builtins.toJSON

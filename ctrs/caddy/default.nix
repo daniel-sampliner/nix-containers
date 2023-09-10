@@ -10,8 +10,6 @@
 , mailcap
 , runCommand
 , writeText
-
-, created ? "1970-01-01T00:00:01Z"
 }:
 let
   name = caddy.pname;
@@ -51,10 +49,9 @@ let
     };
 in
 dockerTools.streamLayeredImage {
-  inherit name created;
+  inherit name;
   tag = caddy.version;
 
-  maxLayers = 125;
 
   contents = [
     caddy-w-plugins
