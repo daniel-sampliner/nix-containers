@@ -6,14 +6,14 @@
 , execline
 , killall
 , lib
+, opentofu
 , s6-portable-utils
 , snooze
-, terraform
 , writeTextFile
 }:
 let
   name = "cfdyndns";
-  my-tf = terraform.withPlugins (p: builtins.attrValues {
+  my-tf = opentofu.withPlugins (p: builtins.attrValues {
     inherit (p)
       cloudflare
       http
