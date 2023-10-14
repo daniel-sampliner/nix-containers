@@ -118,13 +118,12 @@ jobs:
 
   success:
     runs-on: ubuntu-latest
+    if: always()
     needs:
       - build
     steps:
-      - name: fail workflow if any builds failed
-        if: >-
-          ${{
-            contains(needs.*.result, 'failure')
-            || contains(needs.*.result, 'cancelled')
-          }}
-        run: exit 1
+      - name: success
+        run: |
+          jq -e 'length > 0 and all(. == "success")' <<-EOF
+            ${{ toJson(needs.*.result) }}
+          EOF
