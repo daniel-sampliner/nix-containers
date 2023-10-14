@@ -15,11 +15,9 @@
     devshell.url = "github:numtide/devshell";
     devshell.inputs.nixpkgs.follows = "nixpkgs";
 
-    pre-commit-hooks-nix = {
-      url = "github:cachix/pre-commit-hooks.nix";
-      inputs.flake-utils.follows = "flake-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    pre-commit-hooks-nix.url = "github:cachix/pre-commit-hooks.nix";
+    pre-commit-hooks-nix.inputs.flake-utils.follows = "flake-utils";
+    pre-commit-hooks-nix.inputs.nixpkgs.follows = "nixpkgs";
 
     cetusguard.url = "github:hectorm/cetusguard/v1.0.6";
     cetusguard.flake = false;
