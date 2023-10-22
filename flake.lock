@@ -3,16 +3,16 @@
     "cetusguard": {
       "flake": false,
       "locked": {
-        "lastModified": 1691702156,
-        "narHash": "sha256-aXVTufF4m3xxI25Ya9iNf9sJD5l9+LTAxrwdLW0ineE=",
+        "lastModified": 1697986371,
+        "narHash": "sha256-eWEZUD5ayHDY4zXAFluKCjq3t31iSbwCK1yKsabvSY0=",
         "owner": "hectorm",
         "repo": "cetusguard",
-        "rev": "be1e44768313653f0aea606417ee02ba38867db7",
+        "rev": "4d9bd722ed49561639c98bd1ed600c1256dd4325",
         "type": "github"
       },
       "original": {
         "owner": "hectorm",
-        "ref": "v1.0.6",
+        "ref": "v1.0.7",
         "repo": "cetusguard",
         "type": "github"
       }
@@ -113,11 +113,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1697059129,
-        "narHash": "sha256-9NJcFF9CEYPvHJ5ckE8kvINvI84SZZ87PvqMbH6pro0=",
+        "lastModified": 1697723726,
+        "narHash": "sha256-SaTWPkI8a5xSHX/rrKzUe+/uVNy6zCGMXgoeMb7T9rg=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "5e4c2ada4fcd54b99d56d7bd62f384511a7e2593",
+        "rev": "7c9cc5a6e5d38010801741ac830a3f8fd667a7a0",
         "type": "github"
       },
       "original": {
@@ -156,11 +156,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1696846637,
-        "narHash": "sha256-0hv4kbXxci2+pxhuXlVgftj/Jq79VSmtAyvfabCCtYk=",
+        "lastModified": 1697746376,
+        "narHash": "sha256-gu77VkgdfaHgNCVufeb6WP9oqFLjwK4jHcoPZmBVF3E=",
         "owner": "cachix",
         "repo": "pre-commit-hooks.nix",
-        "rev": "42e1b6095ef80a51f79595d9951eb38e91c4e6ca",
+        "rev": "8cc349bfd082da8782b989cad2158c9ad5bd70fd",
         "type": "github"
       },
       "original": {
