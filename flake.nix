@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2023 - 2024 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: GLWTPL
 
@@ -24,7 +24,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    cetusguard.url = "github:hectorm/cetusguard/v1.0.8";
+    cetusguard.url = "github:hectorm/cetusguard/v1.0.9";
     cetusguard.flake = false;
   };
 
