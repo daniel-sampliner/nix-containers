@@ -3,16 +3,16 @@
     "cetusguard": {
       "flake": false,
       "locked": {
-        "lastModified": 1697986371,
-        "narHash": "sha256-eWEZUD5ayHDY4zXAFluKCjq3t31iSbwCK1yKsabvSY0=",
+        "lastModified": 1698613243,
+        "narHash": "sha256-Sj8CoWqBzzSWgdjel25M7foU18m4UAftu3mrUVirNtE=",
         "owner": "hectorm",
         "repo": "cetusguard",
-        "rev": "4d9bd722ed49561639c98bd1ed600c1256dd4325",
+        "rev": "6ec1603bb1f4f0d834042a53cc2f63261b70b286",
         "type": "github"
       },
       "original": {
         "owner": "hectorm",
-        "ref": "v1.0.7",
+        "ref": "v1.0.8",
         "repo": "cetusguard",
         "type": "github"
       }
