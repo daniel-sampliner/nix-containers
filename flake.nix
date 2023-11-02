@@ -21,7 +21,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    cetusguard.url = "github:hectorm/cetusguard/v1.0.7";
+    cetusguard.url = "github:hectorm/cetusguard/v1.0.8";
     cetusguard.flake = false;
   };
 
