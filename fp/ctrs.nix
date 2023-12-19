@@ -22,10 +22,11 @@ in
         chrony = pkgs.callPackage ../ctrs/chrony { };
         coreutils = pkgs.callPackage ../ctrs/coreutils { };
         komga = pkgs.callPackage ../ctrs/komga { };
-        veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
         socat = pkgs.callPackage ../ctrs/socat { };
+        syncthing = pkgs.callPackage ../ctrs/syncthing { };
+        veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { };
         vrising = pkgs.callPackage ../ctrs/vrising { };
 
         cetusguard = pkgs.callPackage ../ctrs/cetusguard { src = inputs.cetusguard; };
