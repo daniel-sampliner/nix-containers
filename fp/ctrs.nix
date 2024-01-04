@@ -23,6 +23,7 @@ in
         coreutils = pkgs.callPackage ../ctrs/coreutils { };
         komga = pkgs.callPackage ../ctrs/komga { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
+        protonvpn-qbittorrent-port-forward = pkgs.callPackage ../ctrs/protonvpn-qbittorrent-port-forward { };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
         socat = pkgs.callPackage ../ctrs/socat { };
         syncthing = pkgs.callPackage ../ctrs/syncthing { };
