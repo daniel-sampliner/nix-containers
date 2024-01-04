@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2023 - 2024 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: GLWTPL
 

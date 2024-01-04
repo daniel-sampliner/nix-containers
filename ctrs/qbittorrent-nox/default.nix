@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2023 - 2024 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: GLWTPL
 
@@ -23,20 +23,17 @@ let
     executable = true;
     destination = "/entrypoint";
     text = ''
-      #!${execline}/bin/execlineb -Ws1
+      #!${execline}/bin/execlineb -WP
 
-      importas -D /config XDG_CONFIG_HOME XDG_CONFIG_HOME
-      define conf ''${XDG_CONFIG_HOME}/qBittorrent/qBittorrent.conf
+      importas -i XDG_CONFIG_HOME XDG_CONFIG_HOME
+      define confDir ''${XDG_CONFIG_HOME}/qBittorrent
 
-      ifelse { eltest -f $conf } { ${coreutils}/bin/stdbuf -oL $1 $@ }
-      ifelse
-        { ${coreutils}/bin/install -v -Dm0644 ${config} $conf }
-        { ${coreutils}/bin/stdbuf -oL $1 $@ }
-      foreground
-        { fdmove -c 1 2
-          ${coreutils}/bin/printf
-            "failed to install default config\n" }
-        exit 1
+      execline-umask 022
+      if { mkdir -p $confDir }
+      if { cp
+        --backup=numbered --update --no-preserve=all --verbose
+        ${config} ''${confDir}/qBittorrent.conf }
+      stdbuf -oL qbittorrent-nox
     '';
   };
 in
@@ -53,7 +50,6 @@ dockerTools.streamLayeredImage {
   ];
 
   config = {
-    Cmd = [ "qbittorrent-nox" ];
     Entrypoint = [ "/entrypoint" ];
     Env = [
       "XDG_CONFIG_HOME=/config"
