@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2023 - 2024 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: GLWTPL
 
@@ -23,11 +23,13 @@ in
         coreutils = pkgs.callPackage ../ctrs/coreutils { };
         komga = pkgs.callPackage ../ctrs/komga { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
+        protonvpn-qbittorrent-port-forward = pkgs.callPackage ../ctrs/protonvpn-qbittorrent-port-forward { };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
         socat = pkgs.callPackage ../ctrs/socat { };
         syncthing = pkgs.callPackage ../ctrs/syncthing { };
         veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { };
         vrising = pkgs.callPackage ../ctrs/vrising { };
+        wireguard = pkgs.callPackage ../ctrs/wireguard { };
 
         cetusguard = pkgs.callPackage ../ctrs/cetusguard { src = inputs.cetusguard; };
       };
