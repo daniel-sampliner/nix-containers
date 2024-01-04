@@ -1,0 +1,33 @@
+From 430b444d31bd23851f2395093dff594b8d0ab626 Mon Sep 17 00:00:00 2001
+From: Daniel Sampliner <samplinerD@gmail.com>
+Date: Wed, 3 Jan 2024 18:10:42 -0500
+Subject: [PATCH 2/2] wg-quick: dont use iptables raw table
+
+---
+ src/wg-quick/linux.bash | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/wg-quick/linux.bash b/src/wg-quick/linux.bash
+index ac34dfa..8162b6d 100755
+--- a/src/wg-quick/linux.bash
++++ b/src/wg-quick/linux.bash
+@@ -224,7 +224,7 @@ add_default() {
+ 	cmd ip $proto rule add table main suppress_prefixlength 0
+ 	cmd ip $proto route add "$1" dev "$INTERFACE" table $table
+ 
+-	local marker="-m comment --comment \"wg-quick(8) rule for $INTERFACE\"" restore=$'*raw\n' nftable="wg-quick-$INTERFACE" nftcmd 
++	local marker="-m comment --comment \"wg-quick(8) rule for $INTERFACE\"" restore=$'*mangle\n' nftable="wg-quick-$INTERFACE" nftcmd
+ 	printf -v nftcmd '%sadd table %s %s\n' "$nftcmd" "$pf" "$nftable"
+ 	printf -v nftcmd '%sadd chain %s %s preraw { type filter hook prerouting priority -300; }\n' "$nftcmd" "$pf" "$nftable"
+ 	printf -v nftcmd '%sadd chain %s %s premangle { type filter hook prerouting priority -150; }\n' "$nftcmd" "$pf" "$nftable"
+@@ -234,7 +234,7 @@ add_default() {
+ 		printf -v restore '%s-I PREROUTING ! -i %s -d %s -m addrtype ! --src-type LOCAL -j DROP %s\n' "$restore" "$INTERFACE" "${BASH_REMATCH[1]}" "$marker"
+ 		printf -v nftcmd '%sadd rule %s %s preraw iifname != "%s" %s daddr %s fib saddr type != local drop\n' "$nftcmd" "$pf" "$nftable" "$INTERFACE" "$pf" "${BASH_REMATCH[1]}"
+ 	done < <(ip -o $proto addr show dev "$INTERFACE" 2>/dev/null)
+-	printf -v restore '%sCOMMIT\n*mangle\n-I POSTROUTING -m mark --mark %d -p udp -j CONNMARK --save-mark %s\n-I PREROUTING -p udp -j CONNMARK --restore-mark %s\nCOMMIT\n' "$restore" $table "$marker" "$marker"
++	printf -v restore '%sCOMMIT\n*mangle\n-I POSTROUTING -m mark --mark %d -p udp -j CONNMARK --save-mark %s\n-I PREROUTING 2 -p udp -j CONNMARK --restore-mark %s\nCOMMIT\n' "$restore" $table "$marker" "$marker"
+ 	printf -v nftcmd '%sadd rule %s %s postmangle meta l4proto udp mark %d ct mark set mark \n' "$nftcmd" "$pf" "$nftable" $table
+ 	printf -v nftcmd '%sadd rule %s %s premangle meta l4proto udp meta mark set ct mark \n' "$nftcmd" "$pf" "$nftable"
+ 	[[ $proto == -4 && $(sysctl -n net.ipv4.conf.all.src_valid_mark) != 1 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1
+-- 
+2.40.1

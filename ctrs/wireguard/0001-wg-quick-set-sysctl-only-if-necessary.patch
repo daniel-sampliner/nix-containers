@@ -1,0 +1,24 @@
+From f812f74009312f1875391ab1569bbc6e817435a6 Mon Sep 17 00:00:00 2001
+From: Daniel Sampliner <samplinerD@gmail.com>
+Date: Wed, 3 Jan 2024 15:27:51 -0500
+Subject: [PATCH 1/2] wg-quick: set sysctl only if necessary
+
+---
+ src/wg-quick/linux.bash | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/wg-quick/linux.bash b/src/wg-quick/linux.bash
+index 4193ce5..ac34dfa 100755
+--- a/src/wg-quick/linux.bash
++++ b/src/wg-quick/linux.bash
+@@ -237,7 +237,7 @@ add_default() {
+ 	printf -v restore '%sCOMMIT\n*mangle\n-I POSTROUTING -m mark --mark %d -p udp -j CONNMARK --save-mark %s\n-I PREROUTING -p udp -j CONNMARK --restore-mark %s\nCOMMIT\n' "$restore" $table "$marker" "$marker"
+ 	printf -v nftcmd '%sadd rule %s %s postmangle meta l4proto udp mark %d ct mark set mark \n' "$nftcmd" "$pf" "$nftable" $table
+ 	printf -v nftcmd '%sadd rule %s %s premangle meta l4proto udp meta mark set ct mark \n' "$nftcmd" "$pf" "$nftable"
+-	[[ $proto == -4 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1
++	[[ $proto == -4 && $(sysctl -n net.ipv4.conf.all.src_valid_mark) != 1 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1
+ 	if type -p nft >/dev/null; then
+ 		cmd nft -f <(echo -n "$nftcmd")
+ 	else
+-- 
+2.40.1
