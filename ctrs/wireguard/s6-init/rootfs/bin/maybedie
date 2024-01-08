@@ -1,0 +1,8 @@
+#!@execline@/bin/execlineb -WS0
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+importas -D 69 -u rc ?
+ifelse { eltest $rc -gt 0 } { die $rc } exec $@
