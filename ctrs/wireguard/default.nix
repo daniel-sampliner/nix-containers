@@ -7,8 +7,15 @@
 , curl
 , execline
 , iptables-legacy
+, jq
+, s6
+, s6-linux-init
+, s6-portable-utils
+, s6-rc
+, snooze
+, stdenvNoCC
+, util-linuxMinimal
 , wireguard-tools
-, writeTextFile
 }:
 let
   name = "wireguard";
@@ -27,43 +34,77 @@ let
     '';
   });
 
-  entrypoint = writeTextFile {
-    name = "entrypoint";
-    executable = true;
-    destination = "/entrypoint";
-    text =
-      let conf = "/etc/wireguard/wg0.conf";
-      in ''
-        #!${execline}/bin/execlineb -WP
-        if {
-          importas -i -u -n WG_CONFIG WG_CONFIG
-          execline-umask 077
-          if { mkdir -p ${builtins.dirOf conf} }
-          redirfd -w 1 ${conf} echo $WG_CONFIG
-        }
-        if { wg-quick up ${conf} }
+  s6-init =
+    let
+      s6Dir = "/etc/s6";
 
-        chroot --userspec=65534:65534 / sleep +inf
-      '';
-  };
+      s6DB = "${s6Dir}/db";
+      s6BaseDir = "${s6Dir}/basedir";
+      s6MkFifos = "${s6BaseDir}/mkfifos";
+      s6RunDir = "/run/s6";
+      s6ContainerEnv = "${s6RunDir}/container_environment";
+    in
+    stdenvNoCC.mkDerivation {
+      name = "s6-init";
+      src = ./s6-init;
 
-  healthcheck = writeTextFile {
-    name = "healthcheck";
-    executable = true;
-    destination = "/healthcheck";
-    text =
-      let
-        curlCmd = "curl --fail --silent --show-error "
-          + "--max-time 3 --retry 5 --retry-max-time 25";
-        endpoint = "https://icanhazip.com";
-      in
-      ''
-        #!${execline}/bin/execlineb -WP
-        backtick -E PUB_IP { ${curlCmd} --interface eth0 ${endpoint} }
-        backtick -E VPN_IP { ${curlCmd} --interface wg0 ${endpoint} }
-        eltest $PUB_IP != $VPN_IP
+      inherit
+        execline
+        s6BaseDir
+        s6ContainerEnv
+        s6DB
+        s6Dir
+        s6MkFifos
+        s6RunDir
+        ;
+
+      buildInputs = [
+        s6-linux-init
+        s6-portable-utils
+        s6-rc
+      ];
+
+      patchPhase = ''
+        find . -type f | while read -r ff; do
+          substituteAllInPlace "$ff"
+        done
       '';
-  };
+
+      buildPhase = ''
+        basedir=$PWD${s6BaseDir}
+        mkdir -p ''${basedir%/*}
+        s6-linux-init-maker \
+          -NCB \
+          -c ${s6BaseDir} \
+          -t 2 \
+          -s ${s6ContainerEnv} \
+          -f ./skel \
+          -- $basedir
+
+        s6-rc-compile -v2 $PWD${s6DB} ./s6-rc.d
+
+        find $basedir -type p \
+          | tee >(xargs -r rm -- >&2) \
+          | sed "s:$PWD${s6BaseDir}/run-image:/run:" \
+          > $PWD${s6MkFifos}
+      '';
+
+      installPhase = ''
+        mkdir -p $out/${s6Dir}
+        s6-hiercopy $PWD/${s6Dir} $out/${s6Dir}
+
+        mkdir -p $out/bin
+        for file in $out/${s6BaseDir}/bin/*; do
+          [[ ! -f $file ]] && continue
+          ln -s ''${file#$out/} $out/bin/''${file##*/}
+        done
+
+        cp -a ./rootfs/. $out
+
+        mkdir -p $out/var
+        ln -s /run $out/var/run
+      '';
+    };
 in
 dockerTools.streamLayeredImage {
   inherit name;
@@ -73,15 +114,20 @@ dockerTools.streamLayeredImage {
     coreutils
     curl
     dockerTools.caCertificates
-    entrypoint
-    healthcheck
+    execline
+    jq
+    s6
+    s6-init
+    s6-rc
+    snooze
+    util-linuxMinimal
     wg-tools
   ];
 
   config = {
-    Entrypoint = [ "/entrypoint" ];
+    Entrypoint = [ "/init" ];
     Healthcheck = {
-      Test = [ "CMD" "/healthcheck" ];
+      Test = [ "CMD" "/bin/s6-rc" "diff" ];
       StartPeriod = 5 * 1000000000;
       StartInterval = 1 * 1000000000;
     };
@@ -92,6 +138,6 @@ dockerTools.streamLayeredImage {
   };
 
   passthru = {
-    inherit wg-tools;
+    inherit wg-tools s6-init;
   };
 }
