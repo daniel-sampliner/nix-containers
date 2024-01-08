@@ -16,11 +16,17 @@
 , stdenvNoCC
 , util-linuxMinimal
 , wireguard-tools
+, procps
+, iproute2
 }:
 let
   name = "wireguard";
 
-  wg-tools = (wireguard-tools.override { iptables = iptables-legacy; }).overrideAttrs (_: prev: {
+  wg-tools = (wireguard-tools.override {
+    iptables = iptables-legacy;
+    iproute2 = iproute2.override { iptables = iptables-legacy; };
+    procps = procps.override { withSystemd = false; };
+  }).overrideAttrs (_: prev: {
     patchFlags = "-p2";
     patches = prev.patches or [ ] ++ [
       ./0001-wg-quick-set-sysctl-only-if-necessary.patch
