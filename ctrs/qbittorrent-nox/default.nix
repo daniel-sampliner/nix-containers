@@ -18,7 +18,7 @@ let
     Accepted=true
   '';
 
-  entrypoint = writers.writeExecline { flags = "-WP"; } "/entrypoint" ''
+  entrypoint = writers.writeExecline { } "/entrypoint" ''
     importas -i path PATH
     export PATH ${lib.makeBinPath [coreutils]}:$path
     importas -i XDG_CONFIG_HOME XDG_CONFIG_HOME
