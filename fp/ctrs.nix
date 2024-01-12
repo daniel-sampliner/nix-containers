@@ -73,6 +73,13 @@ in
                   ))
                 ];
               };
+
+              writers = prev.writers // {
+                writeExecline = {flags ? "-WP"}: final.writers.makeScriptWriter {
+                  interpreter = "${final.execline}/bin/execlineb"
+                    + lib.optionalString (flags != "") " ${flags}";
+                };
+              };
             })
         ];
       };
