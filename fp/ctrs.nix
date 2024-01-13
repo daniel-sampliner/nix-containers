@@ -45,6 +45,8 @@ in
         overlays = [
           (final: prev:
             let inherit (final) lib; in {
+              is-online = final.callPackage ../pkgs/is-online { };
+
               dockerTools = prev.dockerTools // {
                 streamLayeredImage = args: lib.pipe args [
                   (a: a // {
@@ -75,7 +77,7 @@ in
               };
 
               writers = prev.writers // {
-                writeExecline = {flags ? "-WP"}: final.writers.makeScriptWriter {
+                writeExecline = { flags ? "-WP" }: final.writers.makeScriptWriter {
                   interpreter = "${final.execline}/bin/execlineb"
                     + lib.optionalString (flags != "") " ${flags}";
                 };

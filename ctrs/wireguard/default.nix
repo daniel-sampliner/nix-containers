@@ -3,21 +3,18 @@
 # SPDX-License-Identifier: GLWTPL
 
 { dockerTools
+, catatonit
 , coreutils
 , curl
-, execline
+, iproute2
 , iptables-legacy
+, is-online
 , jq
-, s6
-, s6-linux-init
-, s6-portable-utils
-, s6-rc
+, procps
 , snooze
-, stdenvNoCC
 , util-linuxMinimal
 , wireguard-tools
-, procps
-, iproute2
+, writers
 }:
 let
   name = "wireguard";
@@ -40,100 +37,68 @@ let
     '';
   });
 
-  s6-init =
-    let
-      s6Dir = "/etc/s6";
+  marker = "/run/marker";
 
-      s6DB = "${s6Dir}/db";
-      s6BaseDir = "${s6Dir}/basedir";
-      s6MkFifos = "${s6BaseDir}/mkfifos";
-      s6RunDir = "/run/s6";
-      s6ContainerEnv = "${s6RunDir}/container_environment";
-    in
-    stdenvNoCC.mkDerivation {
-      name = "s6-init";
-      src = ./s6-init;
+  entrypoint = writers.writeExecline { } "/entrypoint" ''
+    export LC_ALL C
+    importas -i WG_CONFIG WG_CONFIG
 
-      inherit
-        execline
-        s6BaseDir
-        s6ContainerEnv
-        s6DB
-        s6Dir
-        s6MkFifos
-        s6RunDir
-        ;
+    define conf /run/wireguard/wg0.conf
+    define ips /run/protonvpn-ips
+    define ipCheckerUrl https://icanhazip.com
+    define protonServersUrl https://api.protonmail.ch/vpn/logicals
 
-      buildInputs = [
-        s6-linux-init
-        s6-portable-utils
-        s6-rc
-      ];
+    define -s curl "curl --retry 5 --fail --silent --show-error"
 
-      patchPhase = ''
-        find . -type f | while read -r ff; do
-          substituteAllInPlace "$ff"
-        done
-      '';
+    execline-umask 077
 
-      buildPhase = ''
-        basedir=$PWD${s6BaseDir}
-        mkdir -p ''${basedir%/*}
-        s6-linux-init-maker \
-          -NCB \
-          -c ${s6BaseDir} \
-          -t 2 \
-          -s ${s6ContainerEnv} \
-          -f ./skel \
-          -- $basedir
+    if { pipeline { $curl --max-time 5 --retry-max-time 30 $protonServersUrl }
+      pipeline { jq -er --stream "select(.[0][4] == \"ExitIP\") | .[1]" }
+      redirfd -w 1 $ips sort -u }
+    if { eltest -s $ips }
+    foreground { fdmove -c 1 2 printf "downloaded protonvpn IPs\n" }
 
-        s6-rc-compile -v2 $PWD${s6DB} ./s6-rc.d
+    if { mkdir -p /run/wireguard }
+    if { redirfd -w 1 $conf printf "%s\n" $WG_CONFIG }
+    if { wg-quick up $conf }
 
-        find $basedir -type p \
-          | tee >(xargs -r rm -- >&2) \
-          | sed "s:$PWD${s6BaseDir}/run-image:/run:" \
-          > $PWD${s6MkFifos}
-      '';
+    emptyenv -c
+    loopwhilex
+      if { snooze -H* -M* -S* -t ${marker} -T 30 }
+      if { is-online }
+      backtick -E ip { $curl -4 --max-time 1 --retry-max-time 10 $ipCheckerUrl }
+      if { redirfd -w 1 /dev/null look $ip $ips }
+      touch ${marker}
+  '';
 
-      installPhase = ''
-        mkdir -p $out/${s6Dir}
-        s6-hiercopy $PWD/${s6Dir} $out/${s6Dir}
-
-        mkdir -p $out/bin
-        for file in $out/${s6BaseDir}/bin/*; do
-          [[ ! -f $file ]] && continue
-          ln -s ''${file#$out/} $out/bin/''${file##*/}
-        done
-
-        cp -a ./rootfs/. $out
-
-        mkdir -p $out/var
-        ln -s /run $out/var/run
-      '';
-    };
+  healthcheck = writers.writeExecline { } "/healthcheck" ''
+    if { eltest -f ${marker} }
+    if { touch -d -30seconds /run/last }
+    eltest ${marker} -nt /run/last
+  '';
 in
 dockerTools.streamLayeredImage {
   inherit name;
   tag = wireguard-tools.version;
 
   contents = [
+    catatonit
     coreutils
     curl
     dockerTools.caCertificates
-    execline
+    entrypoint
+    healthcheck
+    is-online
     jq
-    s6
-    s6-init
-    s6-rc
     snooze
     util-linuxMinimal
     wg-tools
   ];
 
   config = {
-    Entrypoint = [ "/init" ];
+    Entrypoint = [ "/bin/catatonit" "-g" "--" "/entrypoint" ];
     Healthcheck = {
-      Test = [ "CMD" "/bin/s6-rc" "diff" ];
+      Test = [ "CMD" "/healthcheck" ];
       StartPeriod = 5 * 1000000000;
       StartInterval = 1 * 1000000000;
     };
@@ -141,9 +106,5 @@ dockerTools.streamLayeredImage {
       "org.opencontainers.image.source" =
         "https://github.com/becometheteapot/${name}";
     };
-  };
-
-  passthru = {
-    inherit wg-tools s6-init;
   };
 }
