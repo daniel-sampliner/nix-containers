@@ -46,7 +46,7 @@ let
     stdbuf -oL qbittorrent-nox
   '';
 
-  healthcheck = writers.writeExecline { } "/entrypoint" ''
+  healthcheck = writers.writeExecline { } "/healthcheck" ''
     importas -i path PATH
     export PATH ${lib.makeBinPath [curl is-online]}:$path
 
