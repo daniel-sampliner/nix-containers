@@ -15,7 +15,7 @@
 }:
 let
   name = "protonvpn-qbittorrent-port-forward";
-  portFile = "/data/port";
+  portFile = "/run/port";
 
   natpmpCmd =
     let gateway = "10.2.0.1";
@@ -95,7 +95,7 @@ let
 in
 dockerTools.streamLayeredImage {
   inherit name;
-  tag = "0.0.2";
+  tag = "0.0.3";
 
   contents = [
     catatonit
