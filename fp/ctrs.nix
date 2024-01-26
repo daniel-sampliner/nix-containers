@@ -29,7 +29,7 @@ in
         socat = pkgs.callPackage ../ctrs/socat { };
         syncthing = pkgs.callPackage ../ctrs/syncthing { };
         veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { };
-        vrising = pkgs.callPackage ../ctrs/vrising { };
+        # vrising = pkgs.callPackage ../ctrs/vrising { };
         wireguard = pkgs.callPackage ../ctrs/wireguard { };
 
         cetusguard = pkgs.callPackage ../ctrs/cetusguard { src = inputs.cetusguard; };
