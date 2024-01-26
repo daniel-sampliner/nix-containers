@@ -25,7 +25,7 @@ jobs:
     outputs:
       packages: ${{ steps.build.outputs.packages }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
@@ -45,7 +45,7 @@ jobs:
       matrix:
         package: ${{ fromJSON(needs.gen-matrix.outputs.packages) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
