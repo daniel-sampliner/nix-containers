@@ -5,7 +5,6 @@
 { lib
 , buildGoModule
 , caddy
-, curl
 , dockerTools
 , mailcap
 , runCommand
@@ -16,10 +15,13 @@ let
 
   caddy-w-plugins =
     let
-      modules = [ "github.com/caddy-dns/cloudflare" ];
+      modules = [
+        "github.com/caddy-dns/cloudflare"
+        "github.com/tailscale/caddy-tailscale"
+      ];
       modulesFile = writeText "modules" (lib.concatMapStrings
         (m: "_ \"${m}\"\n")
-        [ "github.com/caddy-dns/cloudflare" ]);
+        modules);
       src = runCommand "src-patched" { } ''
         cp -a ${caddy.src} $out
         chmod -R u+w $out
@@ -44,7 +46,7 @@ let
         postConfigure = caddy.postConfigure or "" + ''
           cp vendor/smuggle/go.{mod,sum} .
         '';
-        vendorHash = "sha256-eg3FyiEtrRpWax6FQCLM9ZgaapmU7ntCoBgBRm100i8=";
+        vendorHash = "sha256-b9ap8vfOhjF+hnN5qWjNOkg1TXtCNWNpMJ6RcAyYvJ4=";
       });
     };
 in
@@ -55,7 +57,6 @@ dockerTools.streamLayeredImage {
 
   contents = [
     caddy-w-plugins
-    curl
     dockerTools.caCertificates
     mailcap
   ];
