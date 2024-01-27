@@ -1,0 +1,35 @@
+#!/bin/execlineb -WS0
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+# preinit
+foreground { fdmove -c 1 2 printf "%-5s : %s\n" BEGIN INIT }
+
+# ifelse -n
+# 	{ eltest -d /run }
+# 	{ if
+# 		{ fdmove -c 1 2 printf "fatal: /run does not exist!\n" }
+# 		exit 1 }
+
+# ifelse -n
+# 	{ eltest -w /run }
+# 	{ if
+# 		{ fdmove -c 1 2 printf "fatal: /run does not have write permission!\n" }
+# 		exit 1 }
+
+if { mkdir -m 0755 @s6RunDir@ }
+if { cp -a /etc/@s6BaseDir@ /run/@s6BaseDir@ }
+
+if { redirfd -r 0 /etc/@s6MkFifos@
+	forstdin -E -o 0 fifo
+	backtick -E dir { dirname $fifo }
+	if { mkdir -p -m 0555 $dir }
+	mkfifo -m 0600 $fifo }
+
+# stage0
+foreground { fdmove -c 1 2 printf "%-5s : %s\n" END INIT }
+
+emptyenv -c
+exec /run/@s6BaseDir@/bin/init $@

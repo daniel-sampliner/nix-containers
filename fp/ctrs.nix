@@ -47,6 +47,7 @@ in
           (final: prev:
             let inherit (final) lib; in {
               is-online = final.callPackage ../pkgs/is-online { };
+              mkS6RC = final.callPackage ../pkgs/mk-s6-rc { };
 
               dockerTools = prev.dockerTools // {
                 streamLayeredImage = args: lib.pipe args [
