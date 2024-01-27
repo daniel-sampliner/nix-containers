@@ -1,0 +1,21 @@
+export LC_ALL C
+s6-envdir -fn @s6ContainerEnv@
+importas -i WG_CONFIG WG_CONFIG
+
+define conf /run/wireguard/wg0.conf
+define ips /run/protonvpn-ips
+define protonServersUrl https://api.protonmail.ch/vpn/logicals
+
+execline-umask 0022
+
+if { pipeline { curl --fail --silent --show-error
+		--max-time 5 --retry-max-time 60 --retry 10
+		$protonServersUrl }
+	pipeline { jq -er --stream "select(.[0][4] == \"ExitIP\") | .[1]" }
+	redirfd -w 1 $ips sort -u }
+if { eltest -s $ips }
+foreground { fdmove -c 1 2 printf "downloaded protonvpn IPs\n" }
+
+if { mkdir -p /run/wireguard }
+if { execline-umask 0077 redirfd -w 1 $conf printf "%s\n" $WG_CONFIG }
+wg-quick up $conf

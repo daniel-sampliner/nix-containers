@@ -3,17 +3,19 @@
 # SPDX-License-Identifier: GLWTPL
 
 { dockerTools
-, catatonit
 , coreutils
 , curl
+, dnsmasq
 , iproute2
 , iptables-legacy
 , is-online
 , jq
+, mkS6RC
 , procps
 , snooze
 , util-linuxMinimal
 , wireguard-tools
+, writeTextDir
 , writers
 }:
 let
@@ -37,44 +39,40 @@ let
     '';
   });
 
-  marker = "/run/marker";
+  s6RC = mkS6RC { verbose = 5; } ./s6-rc;
 
-  entrypoint = writers.writeExecline { } "/entrypoint" ''
-    export LC_ALL C
-    importas -i WG_CONFIG WG_CONFIG
+  resolvconf-conf = writeTextDir "etc/resolvconf.conf" ''
+    libc=NO
+    named=NO
+    pdnsd=NO
+    unbound=NO
 
-    define conf /run/wireguard/wg0.conf
-    define ips /run/protonvpn-ips
+    dnsmasq_conf=/run/dnsmasq.conf.d/openresolv.conf
+    dnsmasq_resolv=/run/resolv.conf
+  '';
+
+  dnsmasq-conf = writeTextDir "/etc/dnsmasq.conf" ''
+    interface=lo
+    resolv-file=/run/resolv.conf
+    clear-on-reload
+
+    conf-dir=/run/dnsmasq.conf.d,*.conf
+  '';
+
+  entrypoint = writers.writeExecline { } "/bin/entrypoint" ''
+    s6-setuidgid 65534:65534
+
     define ipCheckerUrl https://icanhazip.com
-    define protonServersUrl https://api.protonmail.ch/vpn/logicals
-
-    define -s curl "curl --retry 5 --fail --silent --show-error"
-
-    execline-umask 077
-
-    if { pipeline { $curl --max-time 5 --retry-max-time 30 $protonServersUrl }
-      pipeline { jq -er --stream "select(.[0][4] == \"ExitIP\") | .[1]" }
-      redirfd -w 1 $ips sort -u }
-    if { eltest -s $ips }
-    foreground { fdmove -c 1 2 printf "downloaded protonvpn IPs\n" }
-
-    if { mkdir -p /run/wireguard }
-    if { redirfd -w 1 $conf printf "%s\n" $WG_CONFIG }
-    if { wg-quick up $conf }
+    define ips /run/protonvpn-ips
 
     emptyenv -c
     loopwhilex
-      if { snooze -H* -M* -S* -t ${marker} -T 30 }
+      if { snooze -H* -M* -S* -t /run/marker -T 30 }
       if { is-online }
-      backtick -E ip { $curl -4 --max-time 1 --retry-max-time 10 $ipCheckerUrl }
-      if { redirfd -w 1 /dev/null look $ip $ips }
-      touch ${marker}
-  '';
-
-  healthcheck = writers.writeExecline { } "/healthcheck" ''
-    if { eltest -f ${marker} }
-    if { touch -d -30seconds /run/last }
-    eltest ${marker} -nt /run/last
+      backtick -E ip { curl -4 --fail --silent --show-error
+        --max-time 1 --retry-max-time 60 --retry 10
+        $ipCheckerUrl }
+      redirfd -w 1 /dev/null look $ip $ips
   '';
 in
 dockerTools.streamLayeredImage {
@@ -82,29 +80,33 @@ dockerTools.streamLayeredImage {
   tag = wireguard-tools.version;
 
   contents = [
-    catatonit
     coreutils
     curl
+    dnsmasq
+    dnsmasq-conf
     dockerTools.caCertificates
+    dockerTools.fakeNss
     entrypoint
-    healthcheck
+    iproute2
     is-online
     jq
+    resolvconf-conf
+    s6RC
     snooze
     util-linuxMinimal
     wg-tools
   ];
 
   config = {
-    Entrypoint = [ "/bin/catatonit" "-g" "--" "/entrypoint" ];
-    Healthcheck = {
-      Test = [ "CMD" "/healthcheck" ];
-      StartPeriod = 5 * 1000000000;
-      StartInterval = 1 * 1000000000;
-    };
+    Entrypoint = [ "/init" ];
+    Command = [ "entrypoint" ];
+    Healthcheck = { Test = [ "CMD" "s6-rc" "-b" "diff" ]; };
     Labels = {
       "org.opencontainers.image.source" =
         "https://github.com/becometheteapot/${name}";
     };
+    Volumes = { "/run" = { }; };
   };
+
+  passthru = { inherit s6RC; };
 }

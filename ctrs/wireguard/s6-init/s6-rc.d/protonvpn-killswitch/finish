@@ -1,7 +1,0 @@
-#!@execline@/bin/execlineb -WP
-
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
-#
-# SPDX-License-Identifier: GLWTPL
-
-s6-permafailon 60 3 0-255 true

@@ -1,9 +1,0 @@
-#!@execline@/bin/execlineb -WS0
-
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
-#
-# SPDX-License-Identifier: GLWTPL
-
-foreground { redirfd -w 1 /run/s6-linux-init-container-results/exitcode
-	ifelse { eltest $# -eq 0 } { printf "0\n" }  printf "%s\n" $1 }
-halt
