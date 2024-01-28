@@ -1,0 +1,25 @@
+#!/bin/execlineb -Ws1
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+foreground { fdmove -c 1 2 printf "%-5s : %s\n" BEGIN RC.INIT }
+
+s6-envdir -fn @s6ContainerEnv@
+importas -D @verbose@ verbose S6_VERBOSE
+importas -D @timeoutMS@ timeoutMS S6_TIMEOUT_MS
+
+ifelsedie { s6-rc-init -c @s6RCDir@ /run/service }
+ifelsedie { s6-rc -v $verbose -u -t $timeoutMS -- change $1 }
+
+foreground { fdmove -c 1 2 printf "%-5s : %s\n" END RC.INIT }
+
+ifelse { eltest $# -le 1 } { true }
+
+foreground { emptyenv -c $@ }
+importas -i -u rc ?
+ifelse
+	{ eltest $rc -gt 256 }
+	{ backtick -D 128 rc2 { expr ( $rc - 256 ) % 129 + 128 } die $rc2 }
+die $rc

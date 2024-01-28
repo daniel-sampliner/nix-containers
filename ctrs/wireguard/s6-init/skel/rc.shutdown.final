@@ -1,8 +1,0 @@
-#!/bin/execlineb -WP
-
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
-#
-# SPDX-License-Identifier: GLWTPL
-
-foreground { printf "%-5s : %s\n" BEGIN RC.SHUTDOWN.FINAL }
-printf "%-5s : %s\n" END RC.SHUTDOWN.FINAL

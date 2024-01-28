@@ -1,4 +1,4 @@
-#!@execline@/bin/execlineb -WS0
+#!/bin/execlineb -WS0
 
 # SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
 #

@@ -1,0 +1,15 @@
+#!/bin/execlineb -WP
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+foreground { fdmove -c 1 2 printf "%-5s : %s\n" BEGIN SHUTDOWN }
+
+s6-envdir -fn @s6ContainerEnv@
+importas -D @verbose@ verbose S6_VERBOSE
+importas -D @timeoutMS@ timeoutMS S6_TIMEOUT_MS
+
+foreground { s6-rc -v $verbose -t $timeoutMS -bda change }
+
+fdmove -c 1 2 printf "%-5s : %s\n" END SHUTDOWN
