@@ -48,10 +48,11 @@ let
 
   healthcheck = writers.writeExecline { } "/healthcheck" ''
     importas -i path PATH
-    export PATH ${lib.makeBinPath [curl is-online]}:$path
+    export PATH ${lib.makeBinPath [coreutils curl is-online]}:$path
 
-    if { is-online }
-    curl -qsSf localhost:8080/api/v2/app/version
+    if { curl -qsSf localhost:8080/api/v2/app/version }
+    if { printf "\n" }
+    ifelse -nX { is-online } { kill -TERM 1 }
   '';
 in
 dockerTools.streamLayeredImage {
