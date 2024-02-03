@@ -78,6 +78,8 @@ in
                 ];
               };
 
+              iproute2-iptables-legacy = final.iproute2.override { iptables = final.iptables-legacy; };
+
               writers = prev.writers // {
                 writeExecline = { flags ? "-WP" }: final.writers.makeScriptWriter {
                   interpreter = "${final.execline}/bin/execlineb"

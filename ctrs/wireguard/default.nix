@@ -6,7 +6,7 @@
 , coreutils
 , curl
 , dnsmasq
-, iproute2
+, iproute2-iptables-legacy
 , iptables-legacy
 , is-online
 , jq
@@ -21,9 +21,10 @@
 let
   name = "wireguard";
 
+  iproute2 = iproute2-iptables-legacy;
   wg-tools = (wireguard-tools.override {
+    inherit iproute2;
     iptables = iptables-legacy;
-    iproute2 = iproute2.override { iptables = iptables-legacy; };
     procps = procps.override { withSystemd = false; };
   }).overrideAttrs (_: prev: {
     patchFlags = "-p2";
@@ -66,6 +67,7 @@ let
     define ips /run/protonvpn-ips
 
     emptyenv -c
+    iproute2 = iproute2.override { iptables = iptables-legacy; };
     loopwhilex
       if { snooze -H* -M* -S* -t /run/marker -T 30 }
       if { is-online }
