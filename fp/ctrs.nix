@@ -21,6 +21,7 @@ in
         cfdyndns = pkgs.callPackage ../ctrs/cfdyndns { };
         chrony = pkgs.callPackage ../ctrs/chrony { };
         coreutils = pkgs.callPackage ../ctrs/coreutils { };
+        iproute2 = pkgs.callPackage ../ctrs/iproute2 { };
         jellyfin = pkgs.callPackage ../ctrs/jellyfin { };
         komga = pkgs.callPackage ../ctrs/komga { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
