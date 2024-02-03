@@ -52,7 +52,7 @@ let
 
     if { curl -qsSf localhost:8080/api/v2/app/version }
     if { printf "\n" }
-    ifelse -nX { is-online } { kill -TERM 1 }
+    is-online
   '';
 in
 dockerTools.streamLayeredImage {
