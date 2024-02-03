@@ -1,0 +1,29 @@
+#!/bin/execlineb -WP
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+s6-envdir -fn @s6ContainerEnv@
+
+importas -D /data XDG_DATA_HOME XDG_DATA_HOME
+multisubstitute {
+	define stateDir ${XDG_DATA_HOME}/docker-restart-unhealthy
+	define marker mark-healthy
+}
+
+execline-umask 0022
+
+emptyenv -c
+if { redirfd -w 1 /dev/null curl-docker http://./_ping }
+s6-notifyoncheck -d -c "eltest -f ${stateDir}/${marker}"
+
+execline-cd $stateDir
+loopwhilex
+
+if { snooze -v -H* -M* -S0 -t $marker -s 60 }
+if { pipeline -w
+	{ pipeline { cut -d"\t" -f 1 }
+		xargs -r rm -fv -- }
+	ls-containers healthy }
+touch $marker

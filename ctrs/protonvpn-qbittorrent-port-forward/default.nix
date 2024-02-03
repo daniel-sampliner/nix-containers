@@ -76,6 +76,10 @@ let
       importas -i path PATH
       export PATH ${lib.makeBinPath runtimeInputs}:$path
 
+      if { curl
+        --fail --silent --show-error --max-time 3 --retry 10
+        localhost:8080/api/v2/app/version }
+      if { printf "\n" }
       if { timeout 10 ${natpmpCmd "check"} }
 
       emptyenv -c

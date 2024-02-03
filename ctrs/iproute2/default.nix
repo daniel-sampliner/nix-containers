@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GLWTPL
 
 { dockerTools
+, coreutils
 , dash
 , execline
 , iproute2-iptables-legacy
@@ -15,7 +16,7 @@ dockerTools.streamLayeredImage {
   inherit name;
   tag = iproute2.version;
 
-  contents = [ dash execline iproute2 ];
+  contents = [ coreutils dash execline iproute2 ];
 
   extraCommands = ''
     ln -sf dash bin/sh
