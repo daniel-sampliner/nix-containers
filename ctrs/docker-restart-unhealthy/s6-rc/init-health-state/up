@@ -1,0 +1,6 @@
+s6-envdir -fn @s6ContainerEnv@
+
+importas -D /data XDG_DATA_HOME XDG_DATA_HOME
+
+execline-umask 0022
+mkdir -p ${XDG_DATA_HOME}/docker-restart-unhealthy

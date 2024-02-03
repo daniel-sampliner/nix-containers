@@ -1,0 +1,37 @@
+#!/bin/execlineb -WP
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+s6-envdir -fn @s6ContainerEnv@
+
+importas -D /data XDG_DATA_HOME XDG_DATA_HOME
+multisubstitute {
+	importas -D 3 FAILING_STREAK FAILING_STREAK
+	importas -D 5 RESTART_STREAK RESTART_STREAK
+	define stateDir ${XDG_DATA_HOME}/docker-restart-unhealthy
+	define marker restart-unhealthy
+}
+
+execline-umask 0022
+
+emptyenv -c
+if { redirfd -w 1 /dev/null curl-docker http://./_ping }
+s6-notifyoncheck -d -c "eltest -f ${stateDir}/${marker}"
+
+execline-cd $stateDir
+loopwhilex
+
+if { snooze -v -H* -M* -S/30 -t $marker -s 30 }
+if { pipeline { ls-containers unhealthy }
+	forstdin -E -o 0 -p ctr
+	multidefine -d "\t" $ctr { id name }
+	backtick -D 0 -E restarts { redirfd -w 2 /dev/null bc $id }
+	ifelse
+		{ eltest $restarts -ge $RESTART_STREAK }
+		{ printf "container too many restarts: %s\n" $name }
+	if { curl-docker -X POST http://./containers/${id}/restart }
+	foreground { redirfd -w 1 $id bc -e "${restarts} + 1" }
+	printf "restarted container: %s\n" $name }
+touch $marker
