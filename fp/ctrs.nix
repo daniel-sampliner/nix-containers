@@ -21,6 +21,7 @@ in
         cfdyndns = pkgs.callPackage ../ctrs/cfdyndns { };
         chrony = pkgs.callPackage ../ctrs/chrony { };
         coreutils = pkgs.callPackage ../ctrs/coreutils { };
+        iproute2 = pkgs.callPackage ../ctrs/iproute2 { };
         jellyfin = pkgs.callPackage ../ctrs/jellyfin { };
         komga = pkgs.callPackage ../ctrs/komga { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
@@ -77,6 +78,8 @@ in
                   ))
                 ];
               };
+
+              iproute2-iptables-legacy = final.iproute2.override { iptables = final.iptables-legacy; };
 
               writers = prev.writers // {
                 writeExecline = { flags ? "-WP" }: final.writers.makeScriptWriter {
