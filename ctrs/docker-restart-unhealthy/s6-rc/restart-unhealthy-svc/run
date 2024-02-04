@@ -24,7 +24,7 @@ execline-cd $stateDir
 loopwhilex
 
 if { snooze -v -H* -M* -S/30 -t $marker -s 30 }
-if { pipeline { ls-containers unhealthy }
+foreground { pipeline { ls-containers unhealthy }
 	forstdin -E -o 0 -p ctr
 	multidefine -d "\t" $ctr { id name }
 	backtick -D 0 -E restarts { redirfd -w 2 /dev/null bc $id }
@@ -34,4 +34,6 @@ if { pipeline { ls-containers unhealthy }
 	if { curl-docker -X POST http://./containers/${id}/restart }
 	foreground { redirfd -w 1 $id bc -e "${restarts} + 1" }
 	printf "restarted container: %s\n" $name }
-touch $marker
+
+importas -i -u rc ?
+case $rc { [01] { touch $marker } } exit $rc
