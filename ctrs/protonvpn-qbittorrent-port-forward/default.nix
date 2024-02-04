@@ -77,10 +77,16 @@ let
       export PATH ${lib.makeBinPath runtimeInputs}:$path
 
       if { curl
-        --fail --silent --show-error --max-time 3 --retry 10
+        --fail --silent --show-error --max-time 3 --retry 10 --retry-connrefused
         localhost:8080/api/v2/app/version }
       if { printf "\n" }
-      if { timeout 10 ${natpmpCmd "check"} }
+
+      if { touch --date "60 seconds" /run/end }
+      if { loopwhilex -x 0,69
+        if { touch /run/now }
+        ifelse -n { eltest /run/end -nt /run/now } { foreground { fdmove -c 1 2 echo timeout } exit 69 }
+        timeout 10 ${natpmpCmd "check"} }
+      if { rm -- /run/end /run/now }
 
       emptyenv -c
       loopwhilex
@@ -99,7 +105,7 @@ let
 in
 dockerTools.streamLayeredImage {
   inherit name;
-  tag = "0.0.3";
+  tag = "0.0.4";
 
   contents = [
     catatonit
@@ -112,8 +118,8 @@ dockerTools.streamLayeredImage {
     Entrypoint = [ "/bin/catatonit" "-g" "--" "/entrypoint" ];
     Healthcheck = {
       Test = [ "CMD" "/healthcheck" ];
-      StartPeriod = 3 * 1000000000;
-      StartInterval = 1 * 1000000000;
+      StartPeriod = 60 * 1000000000;
+      StartInterval = 5 * 1000000000;
     };
     Labels = {
       "org.opencontainers.image.source" =
