@@ -25,6 +25,7 @@ in
         iproute2 = pkgs.callPackage ../ctrs/iproute2 { };
         jellyfin = pkgs.callPackage ../ctrs/jellyfin { };
         komga = pkgs.callPackage ../ctrs/komga { };
+        netperf = pkgs.callPackage ../ctrs/netperf { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
         protonvpn-qbittorrent-port-forward = pkgs.callPackage ../ctrs/protonvpn-qbittorrent-port-forward { };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
