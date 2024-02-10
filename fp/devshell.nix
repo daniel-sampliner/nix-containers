@@ -88,10 +88,7 @@
           };
 
           tools = {
-            inherit (pkgs)
-              reuse
-              taplo
-              ;
+            inherit (pkgs) reuse;
 
             end-of-file-fixer = pre-commit-hooks;
           };
