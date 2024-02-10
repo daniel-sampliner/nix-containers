@@ -22,6 +22,7 @@ in
         chrony = pkgs.callPackage ../ctrs/chrony { };
         coreutils = pkgs.callPackage ../ctrs/coreutils { };
         docker-restart-unhealthy = pkgs.callPackage ../ctrs/docker-restart-unhealthy { };
+        iperf3 = pkgs.callPackage ../ctrs/iperf3 { };
         iproute2 = pkgs.callPackage ../ctrs/iproute2 { };
         jellyfin = pkgs.callPackage ../ctrs/jellyfin { };
         komga = pkgs.callPackage ../ctrs/komga { };
