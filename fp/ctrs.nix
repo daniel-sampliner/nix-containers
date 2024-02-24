@@ -31,6 +31,7 @@ in
         protonvpn-qbittorrent-port-forward = pkgs.callPackage ../ctrs/protonvpn-qbittorrent-port-forward { };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
         socat = pkgs.callPackage ../ctrs/socat { };
+        sonarr = pkgs.callPackage ../ctrs/sonarr { };
         syncthing = pkgs.callPackage ../ctrs/syncthing { };
         veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { };
         # vrising = pkgs.callPackage ../ctrs/vrising { };
