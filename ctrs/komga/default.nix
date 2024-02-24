@@ -33,9 +33,5 @@ dockerTools.streamLayeredImage {
       StartPeriod = 30 * 1000000000;
       Timeout = 3 * 1000000000;
     };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
   };
 }

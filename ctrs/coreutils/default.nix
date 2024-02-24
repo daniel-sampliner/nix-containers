@@ -22,9 +22,5 @@ dockerTools.streamLayeredImage {
 
   config = {
     Env = [ "PATH=/bin" ];
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
   };
 }

@@ -121,10 +121,6 @@ dockerTools.streamLayeredImage {
       StartPeriod = 60 * 1000000000;
       StartInterval = 5 * 1000000000;
     };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     Volumes = { "/data" = { }; };
   };
 }

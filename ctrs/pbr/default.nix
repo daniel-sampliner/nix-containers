@@ -30,9 +30,5 @@ dockerTools.streamLayeredImage {
 
   config = {
     Entrypoint = [ "pbr" ];
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
   };
 }

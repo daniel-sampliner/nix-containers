@@ -35,10 +35,6 @@ dockerTools.streamLayeredImage {
     Healthcheck = {
       Test = [ "CMD" "${curl}/bin/curl" "-qsSf" "http://localhost:8096/health" ];
     };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     Volumes = {
       "/cache" = { };
       "/config" = { };

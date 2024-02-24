@@ -54,10 +54,6 @@ dockerTools.streamLayeredImage {
       "RESTART_STREAK=5"
       "XDG_DATA_HOME=/data"
     ];
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     Volumes = {
       "/data" = { };
       "/run" = { };

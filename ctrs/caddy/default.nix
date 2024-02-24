@@ -82,10 +82,6 @@ dockerTools.streamLayeredImage {
       "443/udp" = { };
       "2019/tcp" = { };
     };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     WorkingDir = "/srv";
   };
 

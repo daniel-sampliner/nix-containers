@@ -39,9 +39,5 @@ dockerTools.streamLayeredImage {
 
   config = {
     Entrypoint = [ "s6-pause" ];
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
   };
 }

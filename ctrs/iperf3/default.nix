@@ -18,10 +18,6 @@ dockerTools.streamLayeredImage {
     Entrypoint = [ "iperf3" ];
     Env = [ "PATH=/bin" ];
     ExposedPorts = { "5201" = { }; };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     Volumes = { "/tmp" = { }; };
   };
 }

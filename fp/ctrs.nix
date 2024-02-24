@@ -58,6 +58,12 @@ in
                   (a: a // {
                     inherit created;
                     maxLayers = a.maxLayers or 125;
+                    config = {
+                      Labels = {
+                        "org.opencontainers.image.source" =
+                          "https://github.com/becometheteapot/${a.name}";
+                      };
+                    } // a.config or { };
                   })
                   prev.dockerTools.streamLayeredImage
                   (d: builtins.getAttr "overrideAttrs" d (old:

@@ -48,10 +48,6 @@ dockerTools.streamLayeredImage {
     ];
     ExposedPorts = { "2375/tcp" = { }; };
     Healthcheck = { Test = [ "CMD" "/healthcheck" ]; };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
   };
 
   passthru = { inherit cetusguard; };
