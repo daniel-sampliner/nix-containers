@@ -29,6 +29,7 @@ in
         netperf = pkgs.callPackage ../ctrs/netperf { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
         protonvpn-qbittorrent-port-forward = pkgs.callPackage ../ctrs/protonvpn-qbittorrent-port-forward { };
+        prowlarr = pkgs.callPackage ../ctrs/prowlarr { };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
         socat = pkgs.callPackage ../ctrs/socat { };
         sonarr = pkgs.callPackage ../ctrs/sonarr { };
