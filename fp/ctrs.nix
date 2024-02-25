@@ -29,8 +29,10 @@ in
         netperf = pkgs.callPackage ../ctrs/netperf { };
         pbr = pkgs.callPackage ../ctrs/pbr { };
         protonvpn-qbittorrent-port-forward = pkgs.callPackage ../ctrs/protonvpn-qbittorrent-port-forward { };
+        prowlarr = pkgs.callPackage ../ctrs/prowlarr { };
         qbittorrent-nox = pkgs.callPackage ../ctrs/qbittorrent-nox { };
         socat = pkgs.callPackage ../ctrs/socat { };
+        sonarr = pkgs.callPackage ../ctrs/sonarr { };
         syncthing = pkgs.callPackage ../ctrs/syncthing { };
         veloren-healthcheck = pkgs.callPackage ../ctrs/veloren-healthcheck { };
         # vrising = pkgs.callPackage ../ctrs/vrising { };
@@ -58,6 +60,12 @@ in
                   (a: a // {
                     inherit created;
                     maxLayers = a.maxLayers or 125;
+                    config = {
+                      Labels = {
+                        "org.opencontainers.image.source" =
+                          "https://github.com/becometheteapot/${a.name}";
+                      };
+                    } // a.config or { };
                   })
                   prev.dockerTools.streamLayeredImage
                   (d: builtins.getAttr "overrideAttrs" d (old:

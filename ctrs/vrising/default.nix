@@ -140,10 +140,6 @@ dockerTools.streamLayeredImage {
     Healthcheck = {
       Test = [ "CMD" "/healthcheck" ];
     };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     StopSignal = "SIGINT";
     Volumes = {
       "/data" = { };

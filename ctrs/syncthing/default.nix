@@ -45,10 +45,6 @@ dockerTools.streamLayeredImage {
         "https://localhost:8384/rest/noauth/health"
       ];
     };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     Volumes = {
       "/config" = { };
       "/data" = { };

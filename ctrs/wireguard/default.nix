@@ -103,10 +103,6 @@ dockerTools.streamLayeredImage {
     Entrypoint = [ "/init" ];
     Command = [ "entrypoint" ];
     Healthcheck = { Test = [ "CMD" "s6-rc" "-b" "diff" ]; };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
     Volumes = { "/run" = { }; };
   };
 

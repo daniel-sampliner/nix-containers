@@ -17,9 +17,5 @@ dockerTools.streamLayeredImage {
 
   config = {
     Entrypoint = [ "socat" ];
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
   };
 }

@@ -74,9 +74,5 @@ dockerTools.streamLayeredImage {
     ];
     ExposedPorts = { "8080/tcp" = { }; };
     Healthcheck = { Test = [ "CMD" "/healthcheck" ]; };
-    Labels = {
-      "org.opencontainers.image.source" =
-        "https://github.com/becometheteapot/${name}";
-    };
   };
 }
