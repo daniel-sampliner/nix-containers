@@ -36,6 +36,13 @@
               (builtins.attrNames enabledPCHooks)
               config.pre-commit.settings.tools
             ;
+
+            my-tf = pkgs.opentofu.withPlugins (p: builtins.attrValues {
+              inherit (p)
+                cloudflare
+                dns
+                ;
+            });
           in
           pcPkgs
           ++ runtimePkgs
@@ -47,6 +54,8 @@
               rustc
               rustfmt
               ;
+
+            inherit my-tf;
           };
 
         startup.pre-commit.text = config.pre-commit.installationScript;
