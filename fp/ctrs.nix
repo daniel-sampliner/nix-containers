@@ -19,6 +19,7 @@ in
       ctrs = {
         caddy = pkgs.callPackage ../ctrs/caddy { };
         cfdyndns = pkgs.callPackage ../ctrs/cfdyndns { };
+        cf-zerotrust = pkgs.callPackage ../ctrs/cf-zerotrust { };
         chrony = pkgs.callPackage ../ctrs/chrony { };
         coreutils = pkgs.callPackage ../ctrs/coreutils { };
         docker-restart-unhealthy = pkgs.callPackage ../ctrs/docker-restart-unhealthy { };
