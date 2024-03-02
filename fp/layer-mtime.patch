@@ -3,7 +3,7 @@
 @@ SPDX-License-Identifier: GLWTPL
 
 diff --git a/pkgs/build-support/docker/stream_layered_image.py b/pkgs/build-support/docker/stream_layered_image.py
-index 98ec2358cef9..583d904b2c75 100644
+index 98ec2358cef9..982162836607 100644
 --- a/pkgs/build-support/docker/stream_layered_image.py
 +++ b/pkgs/build-support/docker/stream_layered_image.py
 @@ -343,7 +343,7 @@ def main():
@@ -11,9 +11,9 @@ index 98ec2358cef9..583d904b2c75 100644
                    file=sys.stderr)
              info = add_layer_dir(tar, store_layer, store_dir,
 -                                 mtime, uid, gid, uname, gname)
-+                                 mtime=1, uid, gid, uname, gname)
++                                 1, uid, gid, uname, gname)
              layers.append(info)
-
+ 
          print("Creating layer", len(layers) + 1, "with customisation...",
 @@ -352,7 +352,7 @@ def main():
            add_customisation_layer(
@@ -23,4 +23,4 @@ index 98ec2358cef9..583d904b2c75 100644
 +            mtime=1
            )
          )
-
+ 
