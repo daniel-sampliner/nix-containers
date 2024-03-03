@@ -12,7 +12,6 @@
 , jq
 , mkS6RC
 , procps
-, snooze
 , util-linuxMinimal
 , wireguard-tools
 , writeTextDir
@@ -60,21 +59,22 @@ let
     conf-dir=/run/dnsmasq.conf.d,*.conf
   '';
 
-  entrypoint = writers.writeExecline { } "/bin/entrypoint" ''
+  healthcheck = writers.writeExecline { } "/bin/healthcheck" ''
+    if { s6-rc -b diff }
+
     s6-setuidgid 65534:65534
 
-    define ipCheckerUrl https://icanhazip.com
-    define ips /run/protonvpn-ips
+    multisubstitute {
+      define ipCheckerUrl https://icanhazip.com
+      define ips /run/protonvpn-ips
+    }
 
     emptyenv -c
-    iproute2 = iproute2.override { iptables = iptables-legacy; };
-    loopwhilex
-      if { snooze -H* -M* -S* -t /run/marker -T 30 }
-      if { is-online }
-      backtick -E ip { curl -4 --fail --silent --show-error
-        --max-time 1 --retry-max-time 60 --retry 10
-        $ipCheckerUrl }
-      redirfd -w 1 /dev/null look $ip $ips
+    if { is-online }
+    backtick -E ip { curl -4 --fail --silent --show-error
+      --max-time 1 --retry-max-time 30 --retry 10
+      $ipCheckerUrl }
+    look $ip $ips
   '';
 in
 dockerTools.streamLayeredImage {
@@ -88,21 +88,23 @@ dockerTools.streamLayeredImage {
     dnsmasq-conf
     dockerTools.caCertificates
     dockerTools.fakeNss
-    entrypoint
+    healthcheck
     iproute2
     is-online
     jq
     resolvconf-conf
     s6RC
-    snooze
     util-linuxMinimal
     wg-tools
   ];
 
   config = {
     Entrypoint = [ "/init" ];
-    Command = [ "entrypoint" ];
-    Healthcheck = { Test = [ "CMD" "s6-rc" "-b" "diff" ]; };
+    Healthcheck = {
+      Test = [ "CMD" "healthcheck" ];
+      StartInterval = 5 * 1000000000;
+      StartPeriod = 60 * 1000000000;
+    };
     Volumes = { "/run" = { }; };
   };
 
