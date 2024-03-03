@@ -16,8 +16,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref_name == 'main' }}
+  cancel-in-progress: true
+  group: >-
+    ${{ github.workflow }}-
+    ${{ github.ref_name == 'main'
+      && github.ref
+      || github.sha }}
 
 env:
   cache-ver: 1
