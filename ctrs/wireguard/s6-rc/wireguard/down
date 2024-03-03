@@ -1,0 +1,2 @@
+define conf /run/wireguard/wg0.conf
+emptyenv -c wg-quick down $conf

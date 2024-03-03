@@ -6,6 +6,7 @@
 , coreutils
 , curl
 , is-online
+, jq
 , lib
 , qbittorrent-nox
 , writeText
@@ -19,7 +20,7 @@ let
     Accepted=true
   '';
 
-  entrypoint = writers.writeExecline { } "/entrypoint" ''
+  entrypoint = writers.writeExecline { } "/bin/entrypoint" ''
     importas -i path PATH
     export PATH ${lib.makeBinPath [coreutils qbittorrent-nox]}:$path
     importas -i XDG_CONFIG_HOME XDG_CONFIG_HOME
@@ -46,12 +47,20 @@ let
     stdbuf -oL qbittorrent-nox
   '';
 
-  healthcheck = writers.writeExecline { } "/healthcheck" ''
+  healthcheck = writers.writeExecline { } "/bin/healthcheck" ''
     importas -i path PATH
-    export PATH ${lib.makeBinPath [coreutils curl is-online]}:$path
+    export PATH ${lib.makeBinPath [coreutils curl is-online jq]}:$path
 
-    if { curl -qsSf localhost:8080/api/v2/app/version }
+    define -s curl "curl -qsSf --max-time 1 --retry 10 --retry-max-time 30"
+
+    if { $curl localhost:8080/api/v2/app/version }
     if { printf "\n" }
+    ifelse
+      { pipeline { $curl localhost:8080/api/v2/torrents/info }
+        pipeline -w { head -n1 }
+        jq -e --stream "select(.[0][1] == \"state\")[1]
+          | select(. == \"moving\")" }
+      { }
     is-online
   '';
 in
@@ -66,13 +75,18 @@ dockerTools.streamLayeredImage {
   ];
 
   config = {
-    Entrypoint = [ "/entrypoint" ];
+    Entrypoint = [ "entrypoint" ];
     Env = [
       "XDG_CONFIG_HOME=/config"
       "XDG_DATA_HOME=/data"
       "XDG_CACHE_HOME=/cache"
     ];
     ExposedPorts = { "8080/tcp" = { }; };
-    Healthcheck = { Test = [ "CMD" "/healthcheck" ]; };
+    Healthcheck = {
+      Test = [ "CMD" "healthcheck" ];
+      Retries = 10;
+      StartInterval = 5 * 1000000000;
+      StartPeriod = 60 * 1000000000;
+    };
   };
 }
