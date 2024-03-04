@@ -1,0 +1,8 @@
+s6-envdir -fn @s6ContainerEnv@
+execline-umask 0022
+
+backtick -E out { ip --oneline route show default 0.0.0.0/0 }
+multidefine $out { "" "" gw "" dev }
+
+heredoc 0 "nameserver ${gw}
+" resolvconf -a $dev
