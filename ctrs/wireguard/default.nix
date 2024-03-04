@@ -49,7 +49,7 @@ let
     pdnsd=NO
     unbound=NO
 
-    dnsmasq_restart="${s6}/bin/s6-svc -wr /run/service/dnsmasq"
+    dnsmasq_restart="${s6}/bin/s6-svc -r /run/service/dnsmasq"
     dnsmasq_conf=/run/dnsmasq.conf.d/10-openresolv.conf
     dnsmasq_resolv=/run/resolv.conf
   '';
