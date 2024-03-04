@@ -20,11 +20,13 @@ emptyenv -c
 if { redirfd -w 1 /dev/null curl-docker http://./_ping }
 s6-notifyoncheck -d -c "eltest -f ${stateDir}/${marker}"
 
+backtick -E seconds { pipeline { seq 0 29 } shuf -n 1 }
+
 execline-cd $stateDir
 loopwhilex
 
-if { snooze -v -H* -M* -S/30 -t $marker -s 30 }
-foreground { pipeline { ls-containers unhealthy }
+if { snooze -v -H* -M* -S${seconds}/30 -t $marker -s 30 }
+foreground { fdmove -c 2 1 pipeline { ls-containers unhealthy }
 	forstdin -E -o 0 -p ctr
 	multidefine -d "\t" $ctr { id name }
 	backtick -D 0 -E restarts { redirfd -w 2 /dev/null bc $id }

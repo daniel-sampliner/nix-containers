@@ -18,11 +18,13 @@ emptyenv -c
 if { redirfd -w 1 /dev/null curl-docker http://./_ping }
 s6-notifyoncheck -d -c "eltest -f ${stateDir}/${marker}"
 
+backtick -E seconds { pipeline { seq 0 59 } shuf -n 1 }
+
 execline-cd $stateDir
 loopwhilex
 
-if { snooze -v -H* -M* -S0 -t $marker -s 60 }
-if { pipeline -w
+if { snooze -v -H* -M* -S${seconds} -t $marker -s 60 }
+if { fdmove -c 2 1 pipeline -w
 	{ pipeline { cut -d"\t" -f 1 }
 		xargs -r rm -fv -- }
 	ls-containers healthy }
