@@ -11,7 +11,9 @@
 , is-online
 , jq
 , mkS6RC
+, openresolv
 , procps
+, s6
 , util-linuxMinimal
 , wireguard-tools
 , writeTextDir
@@ -47,7 +49,8 @@ let
     pdnsd=NO
     unbound=NO
 
-    dnsmasq_conf=/run/dnsmasq.conf.d/openresolv.conf
+    dnsmasq_restart="${s6}/bin/s6-svc -wr /run/service/dnsmasq"
+    dnsmasq_conf=/run/dnsmasq.conf.d/10-openresolv.conf
     dnsmasq_resolv=/run/resolv.conf
   '';
 
@@ -82,6 +85,8 @@ dockerTools.streamLayeredImage {
   tag = wireguard-tools.version;
 
   contents = [
+    resolvconf-conf
+
     coreutils
     curl
     dnsmasq
@@ -92,7 +97,7 @@ dockerTools.streamLayeredImage {
     iproute2
     is-online
     jq
-    resolvconf-conf
+    openresolv
     s6RC
     util-linuxMinimal
     wg-tools

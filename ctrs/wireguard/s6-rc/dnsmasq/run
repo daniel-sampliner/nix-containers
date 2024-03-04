@@ -8,16 +8,12 @@ s6-envdir -fn @s6ContainerEnv@
 
 execline-umask 0022
 
-if { pipeline { ip --oneline route show default via 0.0.0.0/0 }
-	pipeline { cut -d " " -f 3 }
-	pipeline { sort -u }
-	redirfd -w 1 /run/resolv.conf
-	forstdin -E -o 0 gw
-	printf "nameserver %s\n" $gw }
-if { redirfd -a 1 /run/resolv.conf
-	forx -E -o 0 ns { 1.1.1.1 1.0.0.1 }
-	printf "nameserver %s\n" $ns }
-
 if { mkdir -p -m0755 /run/dnsmasq.conf.d }
+if { pipeline { ip --oneline route show default 0.0.0.0/0 }
+	pipeline { cut -d" " -f 3 }
+	pipeline { sort -u }
+	redirfd -w 1 /run/dnsmasq.conf.d/00-docker.conf
+	forstdin -E -o 0 gw
+	printf "server=//%s\n" $gw }
 
 dnsmasq -k -8 -
