@@ -75,7 +75,7 @@ let
     emptyenv -c
     if { is-online }
     backtick -E ip { curl -4 --fail --silent --show-error
-      --max-time 1 --retry-max-time 30 --retry 10
+      --max-time 1 --retry-max-time 10 --retry 10
       $ipCheckerUrl }
     look $ip $ips
   '';
