@@ -51,7 +51,7 @@ let
     importas -i path PATH
     export PATH ${lib.makeBinPath [coreutils curl is-online jq]}:$path
 
-    define -s curl "curl -qsSf --max-time 1 --retry 10 --retry-max-time 30"
+    define -s curl "curl -qsSf --max-time 1 --retry 10 --retry-max-time 15"
 
     if { $curl localhost:8080/api/v2/app/version }
     if { printf "\n" }
@@ -84,7 +84,6 @@ dockerTools.streamLayeredImage {
     ExposedPorts = { "8080/tcp" = { }; };
     Healthcheck = {
       Test = [ "CMD" "healthcheck" ];
-      Retries = 10;
       StartInterval = 5 * 1000000000;
       StartPeriod = 60 * 1000000000;
     };
