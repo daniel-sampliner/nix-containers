@@ -33,7 +33,7 @@ let
 in
 dockerTools.streamLayeredImage {
   inherit name;
-  tag = "0.0.2";
+  tag = "0.0.3";
 
   contents = [
     coreutils

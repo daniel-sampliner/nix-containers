@@ -27,7 +27,7 @@ loopwhilex
 
 if { snooze -v -H* -M* -S${seconds}/30 -t $marker -s 30 }
 foreground { fdmove -c 2 1 pipeline { ls-containers unhealthy }
-	forstdin -E -o 0 -p ctr
+	forstdin -E -o 0 ctr
 	multidefine -d "\t" $ctr { id name }
 	backtick -D 0 -E restarts { redirfd -w 2 /dev/null bc $id }
 	ifelse
