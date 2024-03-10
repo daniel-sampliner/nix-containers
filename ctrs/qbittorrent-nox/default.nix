@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GLWTPL
 
 { dockerTools
+, catatonit
 , coreutils
 , curl
 , is-online
@@ -69,6 +70,7 @@ dockerTools.streamLayeredImage {
   tag = qbittorrent-nox.version;
 
   contents = [
+    catatonit
     dockerTools.caCertificates
     entrypoint
     healthcheck
@@ -83,7 +85,7 @@ dockerTools.streamLayeredImage {
     ];
     ExposedPorts = { "8080/tcp" = { }; };
     Healthcheck = {
-      Test = [ "CMD" "healthcheck" ];
+      Test = [ "CMD" "catatonit" "--" "healthcheck" ];
       StartInterval = 5 * 1000000000;
       StartPeriod = 60 * 1000000000;
     };
